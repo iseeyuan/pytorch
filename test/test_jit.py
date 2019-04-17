@@ -646,20 +646,18 @@ class JitTestCase(TestCase):
 
         return ge
 
-    def createScriptModuleFromGraph(self, trace):
+    def createFunctionFromGraph(self, trace):
         graph = trace if isinstance(trace, torch._C.Graph) else trace.graph()
-        m = torch.jit.ScriptModule()
-        m._c._create_method_from_graph("forward", graph)
-        return m
+        return torch._C._create_function_from_graph("forward", graph)
 
     def assertExportImport(self, trace, inputs):
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         self.assertExportImportModule(m, inputs)
 
     def assertExportImportModule(self, m, inputs):
         m_import = self.getExportImportCopy(m)
-        self.assertEqual(self.runAndSaveRNG(m.forward, inputs),
-                         self.runAndSaveRNG(m_import.forward, inputs))
+        self.assertEqual(self.runAndSaveRNG(m, inputs),
+                         self.runAndSaveRNG(m_import, inputs))
 
     def runAndSaveRNG(self, func, inputs, kwargs=None):
         kwargs = kwargs if kwargs else {}
@@ -1059,7 +1057,7 @@ class TestJit(JitTestCase):
         net = Net()
         t = torch.ones(2, requires_grad=True)
         trace, outputs, inputs = torch.jit.get_trace_graph(net, (t,), return_inputs=True)
-        self.assertEqual(outputs, self.createScriptModuleFromGraph(trace)(*inputs))
+        self.assertEqual(outputs, self.createFunctionFromGraph(trace)(*inputs))
         self.assertExportImport(trace, (t,))
         torch.onnx._optimize_trace(trace, operator_export_type=OperatorExportTypes.ONNX)
         FileCheck().check("onnx::LogSoftmax").check("scope: Net").run(str(trace))
@@ -1773,7 +1771,7 @@ graph(%x : Tensor,
         x = torch.ones(2, 2, 2, 2)
         trace, outputs, inputs = torch.jit.get_trace_graph(nn.BatchNorm2d(2), x,
                                                            _force_outplace=True, return_inputs=True)
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         self.assertEqual(outputs, m(*inputs))
 
     def test_dropout(self):
@@ -1781,7 +1779,7 @@ graph(%x : Tensor,
         with torch.random.fork_rng(devices=[]):
             trace, outputs, inputs = torch.jit.get_trace_graph(nn.Dropout(0.6), x, return_inputs=True)
         with torch.random.fork_rng(devices=[]):
-            m = self.createScriptModuleFromGraph(trace)
+            m = self.createFunctionFromGraph(trace)
             self.assertEqual(outputs, m(*inputs))
 
     @unittest.skipIf(not RUN_CUDA, "test_dropout_cuda require CUDA")
@@ -1810,7 +1808,7 @@ graph(%x : Tensor,
     def test_conv(self):
         x = torch.ones(20, 16, 50, 40)
         trace, outputs, inputs = torch.jit.get_trace_graph(nn.Conv2d(16, 13, 3, bias=False), x, return_inputs=True)
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         self.assertEqual(outputs, m(*inputs))
 
     def test_repeated_input(self):
@@ -1838,7 +1836,7 @@ graph(%x : Tensor,
         with torch.random.fork_rng(devices=[]):
             trace, outputs, inputs = torch.jit.get_trace_graph(model, x, return_inputs=True)
         self.run_pass('cse', trace)
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         with torch.random.fork_rng(devices=[]):
             self.assertEqual(outputs, m(*inputs))
 
@@ -1852,7 +1850,7 @@ graph(%x : Tensor,
 
         trace, outputs, inputs = torch.jit.get_trace_graph(f, (x, ), return_inputs=True)
         self.run_pass('dce', trace)
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         self.assertEqual(outputs, m(*inputs))
         self.assertExportImport(trace, (x,))
 
@@ -1907,7 +1905,7 @@ graph(%x : Tensor,
         x = torch.randn(2, 2)
         trace, outputs, inputs = torch.jit.get_trace_graph(
             lambda x: F.threshold(x, 0, 0, inplace=True), (x, ), return_inputs=True)
-        m = self.createScriptModuleFromGraph(trace)
+        m = self.createFunctionFromGraph(trace)
         self.assertEqual(outputs, m(*inputs))
         FileCheck().check("threshold_").run(str(trace))
         self.assertExportImport(trace, (x,))
@@ -7454,8 +7452,7 @@ a")
             return a, y
 
         self.run_pass('constant_propagation', list_tensors.graph)
-        m = torch.jit.ScriptModule()
-        m._c._create_method_from_graph("forward", list_tensors.graph)
+        m = self.createFunctionFromGraph(list_tensors.graph)
         # testing that tensor type of lists is unified
         self.getExportImportCopy(m)
 
@@ -11445,8 +11442,7 @@ a")
             return c
 
         self.run_pass('constant_propagation', foo.graph)
-        m = torch.jit.ScriptModule()
-        m._c._create_method_from_graph("forward", foo.graph)
+        m = self.createFunctionFromGraph(foo.graph)
         self.getExportImportCopy(m)
 
     def test_attribute_serialization(self):
