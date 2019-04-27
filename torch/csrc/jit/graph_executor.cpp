@@ -74,7 +74,10 @@ const size_t autodiffSubgraphInlineThreshold = 5;
 struct ExecutionPlan {
   ExecutionPlan() = default;
   ExecutionPlan(std::shared_ptr<Graph> graph)
-      : code(graph), graph(std::move(graph)) {}
+      : code(graph), graph(std::move(graph)) {
+    std::cout << code << std::endl;
+//    code.exportInstructions("/Users/myuan/data/resnet18.bc");
+  }
 
   void run(Stack& stack) const {
     InterpreterState(code).run(stack);

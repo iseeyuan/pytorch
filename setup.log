@@ -1,0 +1,203 @@
+Script started on Tue Apr 23 17:44:28 2019
+[?1034hbash-3.2$ /usr/bin/cmake[C[C[C[C[C[C[C[C[C[C[Kpython setup.py -v[K[Kbuild -v
+Building wheel torch-1.1.0a0+80020b3
+-- Building version 1.1.0a0+80020b3
+[0/1] Install the project...[K
+-- Install configuration: "Debug"
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobuf-lited.a(arenastring.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobuf-lited.a(io_win32.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobufd.a(arenastring.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobufd.a(io_win32.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobufd.a(gzip_stream.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libprotobufd.a(error_listener.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libfbgemm.a(ExecuteKernel.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libasmjit.a(utils.cpp.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libasmjit.a(x86operand.cpp.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libonnx.a(defs.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libonnx.a(old.cc.o) has no symbols
+/Applications/Xcode_10.1_fb.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib: file: /Users/myuan/src/pt_fork/pytorch/torch/lib/libTHD.a(Cuda.cpp.o) has no symbols
+copying third_party/pybind11/include/pybind11/attr.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/embed.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/numpy.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/pybind11.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/operators.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/iostream.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/chrono.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/stl_bind.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/buffer_info.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/options.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/functional.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/stl.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/detail/typeid.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/detail/descr.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/detail/internals.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/detail/common.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/detail/class.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/detail/init.h -> torch/include/pybind11/detail
+copying third_party/pybind11/include/pybind11/common.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/eval.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/cast.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/eigen.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/pytypes.h -> torch/include/pybind11
+copying third_party/pybind11/include/pybind11/complex.h -> torch/include/pybind11
+running build
+running build_py
+copying torch/version.py -> build/lib.macosx-10.7-x86_64-3.7/torch
+copying caffe2/proto/prof_dag_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/metanet_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/torch_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/caffe2_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/predictor_consts_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/caffe2_legacy_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying caffe2/proto/hsm_pb2.py -> build/lib.macosx-10.7-x86_64-3.7/caffe2/proto
+copying torch/bin/torch_shm_manager -> build/lib.macosx-10.7-x86_64-3.7/torch/bin
+copying torch/bin/protoc -> build/lib.macosx-10.7-x86_64-3.7/torch/bin
+copying torch/test/weakref_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/transform_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/init_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/fatal_signal_asan_no_sig_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/stats_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_TensorTypeId_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/elementwise_op_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/net_dag_utils_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/quantized_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/conv_transpose_op_mobile_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/backend_cutting_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/tensor_interop_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/scalar_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/BinaryMatchImplTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_stackbased_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/string_ops_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_Metaprogramming_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/net_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/time_observer_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/text_file_reader_utils_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/smart_tensor_printer_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/inline_container_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_lambda_legacy_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/distributed_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/dlconvertor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/common_subexpression_elimination_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/TarjansImplTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_intrusive_ptr_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/TopoSortTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/depthwise3x3_conv_op_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_InlineStreamGuard_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_Array_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/batch_matmul_op_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/generate_proposals_op_util_boxes_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/data_filler_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/generate_proposals_op_util_nms_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/operator_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/undefined_tensor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/basic -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/graph_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/module_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/ssa_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/extension_backend_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/thread_init_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/fixed_divisor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_function_legacy_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/apply_utils_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/utility_ops_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_DeviceGuard_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/context_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/device_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_StreamGuard_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/verify_api_visibility -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/boolean_unmask_ops_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/int8_roi_align_op_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/converter_nomigraph_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/test_parallel -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/operator_schema_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/generate_proposals_op_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/blob_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/scalar_tensor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_Half_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_registry_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/common_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/xla_tensor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/pattern_net_transform_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_functor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/half_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/event_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/AlgorithmsTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/SubgraphMatcherTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/mobile_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/native_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/half_float_ops_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_TypeList_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_InlineDeviceGuard_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/timer_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/simple_queue_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/wrapdim_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/op_registration_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/cast_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/atest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/observer_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_function_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/kernel_lambda_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/workspace_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/net_simple_refcount_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/MatchTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_tempfile_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/cpuid_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/broadcast_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_LeftRight_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/conv_to_nnpack_transform_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_flags_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_TypeTraits_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/GraphTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_logging_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/NeuralNetTest -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/int8_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_either_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/math_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/nnpack_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/net_async_tracing_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/c10_typeid_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/bound_shape_inference_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/parallel_net_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/predictor_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/proto_utils_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/TensorImpl_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/test/dead_code_elim_test -> build/lib.macosx-10.7-x86_64-3.7/torch/test
+copying torch/lib/libtorch_python.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libtorch.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libcaffe2_observers.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libcaffe2.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libcaffe2_module_test_dynamic.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libonnxifi.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libtorch.1.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libc10.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libcaffe2_detectron_ops.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libshm.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libonnxifi_dummy.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libfoxi.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+copying torch/lib/libfoxi_dummy.dylib -> build/lib.macosx-10.7-x86_64-3.7/torch/lib
+running build_ext
+-- Building with NumPy bindings
+-- Not using cuDNN
+-- Not using MIOpen
+-- Not using CUDA
+-- Using MKLDNN
+-- Not using NCCL
+-- Building with THD distributed package 
+-- Building without c10d distributed package
+
+Copying extension caffe2.python.caffe2_pybind11_state
+Copying caffe2.python.caffe2_pybind11_state from torch/lib/python3.7/site-packages/caffe2/python/caffe2_pybind11_state.cpython-37m-darwin.so to /Users/myuan/src/pt_fork/pytorch/build/lib.macosx-10.7-x86_64-3.7/caffe2/python/caffe2_pybind11_state.cpython-37m-darwin.so
+copying torch/lib/python3.7/site-packages/caffe2/python/caffe2_pybind11_state.cpython-37m-darwin.so -> /Users/myuan/src/pt_fork/pytorch/build/lib.macosx-10.7-x86_64-3.7/caffe2/python
+building 'torch._C' extension
+gcc -Wno-unused-result -Wsign-compare -Wunreachable-code -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -I/Users/myuan/anaconda3/include -arch x86_64 -I/Users/myuan/anaconda3/include -arch x86_64 -I/Users/myuan/anaconda3/include/python3.7m -c torch/csrc/stub.cpp -o build/temp.macosx-10.7-x86_64-3.7/torch/csrc/stub.o -std=c++11 -Wall -Wextra -Wno-strict-overflow -Wno-unused-parameter -Wno-missing-field-initializers -Wno-write-strings -Wno-unknown-pragmas -Wno-deprecated-declarations -fno-strict-aliasing -Wno-missing-braces -O0 -g
+[0;1;35mwarning: [0minclude path for stdlibc++ headers not found; pass '-std=libc++' on the command line to use the libc++ standard library instead
+      [-Wstdlibcxx-not-found][0m
+1 warning generated.
+g++ -bundle -undefined dynamic_lookup -L/Users/myuan/anaconda3/lib -arch x86_64 -L/Users/myuan/anaconda3/lib -arch x86_64 -arch x86_64 build/temp.macosx-10.7-x86_64-3.7/torch/csrc/stub.o -L/Users/myuan/src/pt_fork/pytorch/torch/lib -lshm -ltorch_python -o build/lib.macosx-10.7-x86_64-3.7/torch/_C.cpython-37m-darwin.so -O0 -g -Wl,-rpath,@loader_path/lib
+clang: [0;1;35mwarning: [0mlibstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated][0m
+ld: library not found for -lstdc++
+clang: [0;1;31merror: [0mlinker command failed with exit code 1 (use -v to see invocation)[0m
+error: command 'g++' failed with exit status 1
+bash-3.2$ exit
+
+Script done on Tue Apr 23 17:45:02 2019

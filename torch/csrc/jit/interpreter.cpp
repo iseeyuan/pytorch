@@ -15,6 +15,8 @@
 #include <torch/csrc/jit/operator.h>
 #include <torch/csrc/jit/script/jit_exception.h>
 #include <torch/csrc/jit/script/logging.h>
+#include <torch/csrc/jit/instruction.h>
+#include <torch/csrc/jit/export_instructions.h>
 
 #include <exception>
 #include <iostream>
@@ -309,34 +311,6 @@ struct PreprocessGraph {
   size_t n_outputs;
 };
 
-// We need some lists for inputs and outputs. To keep all the memory
-// contiguous we allocate a single vector and use offsets into the vector
-// which are stored in the ListHandle struct
-// start is an offset into int_data of Code for ListHandle<int>
-// and bool_data of Code for ListHandle<bool>
-template <typename T>
-struct ListHandle {
-  int start;
-  int size;
-};
-
-struct UseList {
-  // values to be used
-  ListHandle<int> values;
-  // boolean flags indicating whether to free the Tensor after this use
-  ListHandle<bool> free_flags;
-};
-
-// one instruction plus meta-data
-// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-struct Instruction {
-  Operation callback;
-  UseList inputs;
-  ListHandle<int> outputs;
-  Symbol debug_name; // used in dump to understand the generated code
-  std::shared_ptr<SourceLocation> debug_location; // for error reporting
-};
-
 int relativeJump(int from_inst, int to_inst) {
   return to_inst - (from_inst + 1);
 }
@@ -536,6 +510,16 @@ struct CodeImpl {
     return inst;
   }
 
+  void exportInstructions(const std::string& filename) {
+    InstructionList inslist;
+    inslist.instructions = instructions;
+    inslist.int_data = int_data;
+    inslist.bool_data = bool_data;
+    inslist.register_size = register_size;
+
+    ExportInstructions(inslist, filename);
+  }
+
   // helpers to build/access RegList objects
   int get(const ListHandle<int>& list, int i) const {
     return int_data[list.start + i];
@@ -673,9 +657,9 @@ struct InterpreterStateImpl : c10::intrusive_ptr_target {
     size_t last = instructions.size();
 
     while (pc < last) {
-      // std::cout << "executing " << pc << ": ";
-      // function->dumpInstruction(std::cout, pc);
-      // std::cout << "\n";
+       std::cout << "executing " << pc << ": ";
+       function->dumpInstruction(std::cout, pc);
+       std::cout << "\n";
       auto& inst = instructions[pc];
       try {
         loadTensorsFromRegisters(inst.inputs, stack);
@@ -833,6 +817,10 @@ Code::~Code() = default;
 
 const std::vector<GraphExecutor*>& Code::grad_executors() {
   return pImpl->grad_executors();
+}
+
+void Code::exportInstructions(const std::string& filename) const {
+  pImpl->exportInstructions(filename);
 }
 
 InterpreterState::InterpreterState(const Code& code)
