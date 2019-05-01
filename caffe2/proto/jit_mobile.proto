@@ -67,8 +67,6 @@ message AttributeValueProto {
     ss = 5;
     t = 6; 
     ts = 7; 
-    g = 8; 
-    gs = 9;
   }
   required AttributKind kind = 1;
   optional float float_value = 2;
@@ -76,6 +74,9 @@ message AttributeValueProto {
   optional string string_value = 4;
   // if it's a tensor, the offset into the tensor table
   optional int64 tensor_id = 5;
+  repeated float float_array = 6;
+  repeated int64 int_array = 7;
+  repeated string string_array = 8;
 }
 
 message InstructionProto { //instruction

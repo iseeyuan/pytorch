@@ -119,6 +119,7 @@ void InstructionsSerializer::serialize(const InstructionList& inslist) {
     // operator
     auto op = ins_proto->mutable_op();
     auto opName = ins.debug_name.toQualString();
+    std::cout << "Exporting op " << opName << std::endl;
     op->set_name(opName);
     op->set_overload_name("");
 

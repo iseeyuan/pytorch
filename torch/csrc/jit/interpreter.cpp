@@ -667,7 +667,7 @@ struct InterpreterStateImpl : c10::intrusive_ptr_target {
         for (int i = inst.outputs.size - 1; i >= 0; --i) {
           int reg = get(inst.outputs, i);
           registers[reg] = pop(stack);
-           std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
+          std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
         }
         pc = new_pc;
       } catch (Suspend& e) {

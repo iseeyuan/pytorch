@@ -16,11 +16,11 @@ int main(int argc, const char* argv[]) {
   std::cout << "ok\n";
 
   std::vector<torch::jit::IValue> inputs;
-  inputs.push_back(torch::ones({1, 2}));
-//  inputs.push_back(torch::ones({64, 100}));
+//  inputs.push_back(torch::ones({1, 2}));
 //  inputs.push_back(torch::ones({1, 3, 224, 224}));
 
-  module->saveInstructions(inputs, "/Users/myuan/data/linear1.bc");
+  inputs.push_back(torch::ones({64, 100}));
+  module->saveInstructions(inputs, "/Users/myuan/data/three_layer.bc");
 //  at::Tensor output = module->forward(inputs).toTensor();
 //  std::cout << output.slice(/*dim=*/1, /*start=*/0, /*end=*/5) << std::endl;
 }
