@@ -11,6 +11,8 @@
 #include <torch/csrc/jit/ir.h>
 #include <torch/csrc/jit/operator.h>
 #include <torch/csrc/jit/script/jit_exception.h>
+#include <torch/csrc/jit/generic_instruction.h>
+#include <torch/csrc/jit/export_instructions.h>
 
 #include <exception>
 #include <iostream>
@@ -329,7 +331,7 @@ struct Instruction {
   Operation callback;
   UseList inputs;
   ListHandle<int> outputs;
-  Symbol debug_name; // used in dump to understand the generated code
+  c10::Symbol debug_name; // used in dump to understand the generated code
   c10::optional<SourceRange> debug_location; // for error reporting
 };
 
@@ -534,10 +536,45 @@ struct CodeImpl {
     return inst;
   }
 
-  void exportInstructions(std::ostream& os) {
-    // Demonstration only.
-    // TODO: Implement the serializer and deserializer.
-    dump(os);
+  void exportInstructions(Stack& stack, size_t input_size, std::ostream& os) {
+    // Transform instructions to a more generic and easy to serialize format.
+    GenericInstructionList ginslist;
+    for (const auto& ins : instructions) {
+      ginslist.instructions.emplace_back();
+      auto& gins = ginslist.instructions.back();
+
+      gins.name = ins.debug_name.toQualString();
+      gins.overload_name = ""; // TODO: get corresponding overload_name
+
+      // Change inputs and outputs ids to a more generic format:
+      // Each input/output has its own unique id and optionally free_flag.
+      // There's no pre-assumption of registers or continuous indexing map in int_data.
+      for (int i = 0; i < ins.inputs.values.size; ++i) {
+        gins.inputs.emplace_back();
+        auto& input = gins.inputs.back();
+        input.unique_id = get(ins.inputs.values, i);
+        input.free_flag = get(ins.inputs.free_flags, i);
+      }
+
+      // Outputs
+      for (int i = 0; i < ins.outputs.size; ++i) {
+        gins.outputs.emplace_back();
+        auto& output = gins.outputs.back();
+        output.unique_id = get(ins.outputs, i);
+      }
+
+      // Attributes
+      if (gins.name == "prim::Constant") {
+        Stack outstack;
+        ins.callback(outstack);
+        gins.attributes.push_back(outstack.back());
+      } else if (gins.name == "prim::Load") {
+        for (size_t i = input_size; i < stack.size(); ++i) {
+          gins.attributes.push_back(stack[i]);
+        }
+      }
+    }
+    ExportInstructions(ginslist, os);
   }
 
   // helpers to build/access RegList objects
@@ -835,8 +872,8 @@ const std::vector<GraphExecutor*>& Code::grad_executors() {
   return pImpl->grad_executors();
 }
 
-void Code::exportInstructions(std::ostream& os) const {
-  pImpl->exportInstructions(os);
+void Code::exportInstructions(Stack& stack, size_t input_size, std::ostream& os) const {
+  pImpl->exportInstructions(stack, input_size, os);
 }
 
 InterpreterState::InterpreterState(const Code& code)

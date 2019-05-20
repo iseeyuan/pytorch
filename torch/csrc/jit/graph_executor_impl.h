@@ -33,9 +33,12 @@ namespace jit {
 struct ExecutionPlan {
   ExecutionPlan() = default;
   ExecutionPlan(std::shared_ptr<Graph> graph)
-      : code(graph), graph(std::move(graph)) {}
+      : code(graph), graph(std::move(graph)) {
+    std::cout << code << std::endl;
+  }
 
   void run(Stack& stack) const;
+  void saveInstructions(Stack& stack, size_t input_size, std::ostream& os) const;
 
   operator bool() const {
     return static_cast<bool>(graph);
@@ -75,6 +78,7 @@ struct GraphExecutorImplBase {
 
   // entry point where execution begins
   virtual void run(Stack& stack) = 0;
+  virtual void saveInstructions(Stack& inputs, size_t input_size, std::ostream& os) = 0;
   virtual GraphExecutorState getDebugState() = 0;
   virtual ~GraphExecutorImplBase() = default;
 

@@ -67,8 +67,8 @@ void ExecutionPlan::run(Stack& stack) const {
   last_executed_optimized_graph = graph;
 }
 
-void ExecutionPlan::saveInstructions(std::ostream& os) const {
-  code.exportInstructions(os);
+void ExecutionPlan::saveInstructions(Stack& stack, size_t input_size, std::ostream& os) const {
+  code.exportInstructions(stack, input_size, os);
 }
 
 namespace {
@@ -500,12 +500,12 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
     return execution_plan.run(stack);
   }
 
-  void saveInstructions(Stack& stack, std::ostream& os) {
+  void saveInstructions(Stack& stack, size_t input_size, std::ostream& os) {
     checkInputNumber(stack);
 
     auto& execution_plan =
         optimize ? getOrCompile(stack) : getOrCompileFallback();
-    return execution_plan.saveInstructions(os);
+    return execution_plan.saveInstructions(stack, input_size, os);
   }
 
   GraphExecutorState getDebugState() override {
@@ -732,8 +732,8 @@ void GraphExecutor::run(Stack& inputs) {
   return pImpl->run(inputs);
 }
 
-void GraphExecutor::saveInstructions(Stack& inputs, std::ostream& os) {
-  return pImpl->saveInstructions(inputs, os);
+void GraphExecutor::saveInstructions(Stack& inputs, size_t input_size, std::ostream& os) {
+  return pImpl->saveInstructions(inputs, input_size, os);
 }
 
 std::shared_ptr<Graph> GraphExecutor::graph() const {

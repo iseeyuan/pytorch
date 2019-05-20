@@ -21,6 +21,7 @@ void testLiteExecutor() {
     def add_it(self, x, b : int = 4):
       return self.foo + x + b
   )");
+  m->eval();
   std::vector<IValue> inputs;
   inputs.emplace_back(torch::ones({}));
   std::stringstream ss;

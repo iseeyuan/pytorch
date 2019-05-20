@@ -88,24 +88,31 @@ struct TORCH_API Method {
 
   void saveInstructions(
       std::vector<IValue> stack,
-      const std::string& fileName,
-      const Kwargs& kwargs = Kwargs()) {
+      const std::string& fileName) {
     std::ofstream ofs(fileName, std::ofstream::out);
-    saveInstructions(stack, ofs, kwargs);
+    saveInstructions(stack, ofs);
   }
 
     void saveInstructions(
       std::vector<IValue> stack,
-      std::ostream& out,
-      const Kwargs& kwargs = Kwargs()) {
-    getSchema().checkAndNormalizeInputs(stack, kwargs);
+      std::ostream& out) {
+    // In instruction level, we don't know which values in stack is from original
+    // inputs, or constants from checkAndNormalizeInputs(), or from initial_ivalues_.
+    // We pass the original input size. When we export the instructions, we export
+    // the added constants to attributes of load instruction.
+    // At execution, we recover the full stack by appending the attributes in load.
+    // It may be a temp solution with minimum change inside jit.
+    size_t input_size = stack.size();
+
+    getSchema().checkAndNormalizeInputs(stack, Kwargs());
     // TODO: for non-initial inputs, build the connection between inputs
     // and parameters. T44033049
     for (auto input : initial_ivalues_) {
       push(stack, input.value());
     }
-    // use run rather than operator() to skip the second schema check.
-    function_->saveInstructions(std::move(stack), out);
+
+    // build and save instructions with attributes.
+    function_->saveInstructions(std::move(stack), input_size, out);
   }
 
   const std::vector<Slot>& initial_ivalues() const {

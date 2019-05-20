@@ -57,12 +57,12 @@ struct TORCH_API Function {
     run(stack);
   }
 
-  void saveInstructions(Stack& stack, std::ostream& out) {
-    get_executor().saveInstructions(stack, out);
+  void saveInstructions(Stack& stack, size_t input_size, std::ostream& out) {
+    get_executor().saveInstructions(stack, input_size, out);
   }
 
-  void saveInstructions(Stack&& stack, std::ostream& out) {
-    saveInstructions(stack, out);
+  void saveInstructions(Stack&& stack, size_t input_size, std::ostream& out) {
+    saveInstructions(stack, input_size, out);
   }
 
   IValue operator()(
