@@ -8,6 +8,10 @@
 #include "torch/csrc/jit/script/module.h"
 #include "torch/script.h"
 
+#include <torch/csrc/lite_interpreter/import_instructions.h>
+#include <torch/csrc/jit/generic_instruction.h>
+#include <torch/csrc/lite_interpreter/instruction_executor.h>
+
 #include <ATen/ATen.h>
 
 namespace torch {
@@ -17,21 +21,34 @@ namespace test {
 void testLiteExecutor() {
   auto m = std::make_shared<script::Module>();
   m->register_parameter("foo", torch::ones({}), false);
+//  m->define(R"(
+//    def add_it(self, x, b : int = 4):
+//      return self.foo + x + b
+//  )");
   m->define(R"(
-    def add_it(self, x, b : int = 4):
-      return self.foo + x + b
+    def add_it(self, x):
+      return self.foo + x
   )");
   m->eval();
+
   std::vector<IValue> inputs;
-  inputs.emplace_back(torch::ones({}));
+  inputs.emplace_back(5 * torch::ones({}));
+//  m->run_method("add_it", torch::ones({}));
+
   std::stringstream ss;
   m->save_method("add_it", inputs, ss);
+//  m->save_method("add_it", inputs, "/Users/myuan/data/add_it.bc");
+
+  // Load and execute
+  std::shared_ptr<torch::jit::GenericInstructionList> list = torch::jit::loadInstructionList(ss);
+  torch::jit::InstructionExecutor executor(list);
+  executor.run(inputs);
 
   // TODO:
   // 1. Load ss to a InstructionList
   // 2. Execute InstructionList
   // 3. Compare the result to n->run_method("add_it", torch::ones({})).toTensor()
-  AT_ASSERT(!ss.str().empty());
+//  AT_ASSERT(!ss.str().empty());
 }
 
 } // namespace test

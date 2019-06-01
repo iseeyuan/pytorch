@@ -714,17 +714,23 @@ struct InterpreterStateImpl : c10::intrusive_ptr_target {
     size_t last = instructions.size();
 
     while (pc < last) {
-      // std::cout << "executing " << pc << ": ";
-      // function->dumpInstruction(std::cout, pc);
-      // std::cout << "\n";
+      std::cout << "executing " << pc << ": ";
+      function->dumpInstruction(std::cout, pc);
+      std::cout << "\n";
       auto& inst = instructions[pc];
       try {
         loadTensorsFromRegisters(inst.inputs, stack);
+
+        std::cout << "stack:" << std::endl;
+        for (auto val : stack) {
+          std::cout << val << ", " << (int)val.isTensor() << std::endl;
+        }
+
         size_t new_pc = pc + 1 + inst.callback(stack);
         for (int i = inst.outputs.size - 1; i >= 0; --i) {
           int reg = get(inst.outputs, i);
           registers[reg] = pop(stack);
-          // std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
+          std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
         }
         pc = new_pc;
       } catch (Suspend& e) {

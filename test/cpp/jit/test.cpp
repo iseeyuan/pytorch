@@ -39,7 +39,7 @@ using namespace torch::jit::test;
 namespace torch {
 namespace jit {
 #define TH_FORALL_TESTS(_)         \
-  _(LiteExecutor)                  \
+  _(LiteExecutor)                  /*\
   _(ADFormulas)                    \
   _(Attributes)                    \
   _(Blocks)                        \
@@ -83,7 +83,7 @@ namespace jit {
   _(ModuleDefine)                  \
   _(QualifiedName)                 \
   _(ClassImport)                   \
-  _(ScriptObject)
+  _(ScriptObject)*/
 
 #define TH_FORALL_TESTS_CUDA(_) \
   _(ArgumentSpec)               \

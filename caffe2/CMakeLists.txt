@@ -440,7 +440,7 @@ if (NOT INTERN_BUILD_MOBILE)
     ${TORCH_SRC_DIR}/csrc/jit/fuser/executor.cpp
     ${TORCH_SRC_DIR}/csrc/jit/fuser/codegen.cpp
     ${TORCH_SRC_DIR}/csrc/jit/fuser/fallback.cpp
-    ${TORCH_ROOT}/test/cpp/jit/test.cpp
+    #${TORCH_ROOT}/test/cpp/jit/test.cpp
     )
 
   if (WIN32)
@@ -595,7 +595,7 @@ if (NOT INTERN_BUILD_MOBILE)
       )
   else()
     target_compile_options(caffe2 PUBLIC
-      #    -std=c++11
+      -std=c++11
       -Wall
       -Wextra
       -Wno-unused-parameter
