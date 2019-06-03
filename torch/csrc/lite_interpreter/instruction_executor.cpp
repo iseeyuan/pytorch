@@ -27,7 +27,7 @@ void InstructionExecutor::loadTensorsFromRegisters(const std::vector<Variable>& 
   }
 }
 
-bool InstructionExecutor::run(Stack& stack) {
+IValue InstructionExecutor::run(Stack& stack) {
   auto& instructions = ins_list->instructions;
   size_t last = instructions.size();
 
@@ -45,11 +45,11 @@ bool InstructionExecutor::run(Stack& stack) {
     // is to register an operator for each constant. It may also make sense to
     // directly push constants to stack, without goint through the operator
     // registration route.
-    if (inst.name == "prim::Load") {
+    if (inst.name == "prim::Load___") {
       for (const auto& attr : inst.attributes) {
         stack.push_back(attr);
       }
-    } else if (inst.name == "prim::Constant") {
+    } else if (inst.name == "prim::Constant___") {
       if (inst.attributes.empty()) {
         throw std::runtime_error("No values available for constant operator.");
       }
@@ -69,6 +69,8 @@ bool InstructionExecutor::run(Stack& stack) {
     }
     ++pc;
   }
+
+  return stack.front();
 }
 
 }

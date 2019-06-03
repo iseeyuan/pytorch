@@ -5,7 +5,7 @@ set(LITE_EXECUTOR_SRCS
     ${PROJECT_SOURCE_DIR}/torch/csrc/lite_interpreter/register_ins_ops.cpp
     )
 
-message("PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR})
+message("PROJECT_BINARY_DIR:" ${PROJECT_BINARY_DIR})
 
 add_library(lite_executor STATIC ${LITE_EXECUTOR_SRCS})
 target_compile_options(lite_executor PUBLIC

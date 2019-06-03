@@ -333,6 +333,7 @@ struct Instruction {
   ListHandle<int> outputs;
   c10::Symbol debug_name; // used in dump to understand the generated code
   c10::optional<SourceRange> debug_location; // for error reporting
+  std::string extended_name;
 };
 
 int relativeJump(int from_inst, int to_inst) {
@@ -488,6 +489,7 @@ struct CodeImpl {
         moveFlags(n),
         n->outputs());
     instructions[inst].callback = getOperation(n);
+    instructions[inst].extended_name = extendedName(n->schema());
     return inst;
   }
   size_t insertInstruction(
@@ -543,7 +545,8 @@ struct CodeImpl {
       ginslist.instructions.emplace_back();
       auto& gins = ginslist.instructions.back();
 
-      gins.name = ins.debug_name.toQualString();
+//      gins.name = ins.debug_name.toQualString();
+      gins.name = ins.extended_name;
       gins.overload_name = ""; // TODO: get corresponding overload_name
 
       // Change inputs and outputs ids to a more generic format:
@@ -564,11 +567,11 @@ struct CodeImpl {
       }
 
       // Attributes
-      if (gins.name == "prim::Constant") {
+      if (gins.name == "prim::Constant___") {
         Stack outstack;
         ins.callback(outstack);
         gins.attributes.push_back(outstack.back());
-      } else if (gins.name == "prim::Load") {
+      } else if (gins.name == "prim::Load___") {
         for (size_t i = input_size; i < stack.size(); ++i) {
           gins.attributes.push_back(stack[i]);
         }

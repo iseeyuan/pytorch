@@ -13,17 +13,23 @@ static auto registry0 = c10::RegisterOperators().op(
   c10::kernel<decltype(at::matmul), &at::matmul>(),
   c10::dispatchKey(at::CPUTensorId())
 ).op(
-  "aten::add",
+  "aten::add_Tensor_Tensor_Scalar__Tensor",
   c10::kernel([](at::Tensor a, at::Tensor b, at::Scalar c) ->at::Tensor {
     return at::add(a, b, c);
   }),
   c10::dispatchKey(at::CPUTensorId())
 ).op(
-    "prim::Load",
+  "aten::add_Tensor_Scalar_Scalar__Tensor",
+  c10::kernel([](at::Tensor a, at::Scalar b, at::Scalar c) ->at::Tensor {
+                                  return at::add(a, b, c);
+                                }),
+                                c10::dispatchKey(at::CPUTensorId())
+).op(
+    "prim::Load___",
     c10::kernel([]() {
     })
 ).op(
-    "prim::Store",
+    "prim::Store___",
     c10::kernel([]() {
     })
 );

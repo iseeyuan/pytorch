@@ -8,7 +8,7 @@ namespace jit {
 class InstructionExecutor final {
  public:
   explicit InstructionExecutor(std::shared_ptr<GenericInstructionList> ins_list);
-  bool run(Stack& stack);
+  IValue run(Stack& stack);
 
  private:
   void loadTensorsFromRegisters(const std::vector<Variable>& uses, Stack& stack);
