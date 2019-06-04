@@ -497,6 +497,7 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
 
     auto& execution_plan =
         optimize ? getOrCompile(stack) : getOrCompileFallback();
+
     return execution_plan.run(stack);
   }
 
@@ -612,6 +613,7 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
     } else {
       runNondiffOptimization(opt_graph);
     }
+
     // Make sure there are no leftovers from any passes.
     EliminateDeadCode(opt_graph);
     return ExecutionPlan(opt_graph);

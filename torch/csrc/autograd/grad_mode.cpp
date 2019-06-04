@@ -2,7 +2,7 @@
 
 namespace torch { namespace autograd {
 
-thread_local bool GradMode_enabled = true;
+thread_local bool GradMode_enabled = false;
 
 bool GradMode::is_enabled() {
   return GradMode_enabled;

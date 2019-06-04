@@ -16,11 +16,11 @@ int main(int argc, const char* argv[]) {
   std::cout << "ok\n";
 
   std::vector<torch::jit::IValue> inputs;
-  inputs.push_back(torch::ones({1, 2}));
-//  inputs.push_back(torch::ones({1, 3, 224, 224}));
+//  inputs.push_back(torch::ones({1, 2}));
+  inputs.push_back(torch::ones({1, 3, 224, 224}));
 
 //  inputs.push_back(torch::ones({64, 100}));
-  module->save_method("forward", inputs, "/Users/myuan/data/linear_v0.bc");
+//  module->save_method("forward", inputs, "/Users/myuan/data/three_layer.bc");
 
 //  inputs.push_back(torch::ones({1, 2}));
 //  module->saveInstructions(inputs, "/Users/myuan/data/while.bc");
