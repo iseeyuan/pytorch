@@ -282,7 +282,35 @@ void InstructionsDeserializer::loadInstructions(const JsonValue& instructionsVal
             if (key == "intValue") {
               int64_t intVal = std::stoll(j->value.toString());
               ins.attributes.emplace_back(intVal);
-            } else if (key == "tensorId") {
+            }
+            else if (key == "boolValue") {
+              if (j->value.getTag() == JSON_TRUE)
+                ins.attributes.emplace_back(true);
+              else
+                ins.attributes.emplace_back(false);
+            }
+            else if (key == "floatValue") {
+              double doubleVal = j->value.toNumber();
+              ins.attributes.emplace_back(doubleVal);
+            }
+            else if (key == "intList") {
+              std::vector<int64_t> iv;
+              for (auto ii : j->value) {
+                iv.emplace_back(std::stoll(ii->value.toString()));
+              }
+              ins.attributes.emplace_back(iv);
+            }
+            else if (key == "floatList") {
+              std::vector<double> dv;
+              for (auto ii : j->value) {
+                dv.emplace_back(std::stod(ii->value.toString()));
+              }
+              ins.attributes.emplace_back(dv);
+            }
+            else if (key == "kind" && j->value.toString() == "n") {
+              ins.attributes.emplace_back(c10::IValue());
+            }
+            else if (key == "tensorId") {
               size_t id = std::stoi(j->value.toString());
               ins.attributes.emplace_back(tensors[id]);
             }

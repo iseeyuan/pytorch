@@ -117,6 +117,31 @@ void InstructionsSerializer::serialize(const GenericInstructionList& inslist) {
         auto tensor_proto = list_proto.add_tensors();
         convertAndWriteTensor(tensor_id++, val.toTensor(), tensor_proto, storageMap, writer_);
       }
+      else if (val.isIntList()) {
+        attribute->set_kind(instruction::AttributeValueProto::is);
+        for (auto element : val.toIntList()->elements()) {
+          attribute->add_int_list(element);
+        }
+      }
+      else if (val.isDoubleList()) {
+        attribute->set_kind(instruction::AttributeValueProto::fs);
+        for (auto element : val.toDoubleList()->elements()) {
+          attribute->add_float_list(element);
+        }
+      }
+      else if (val.isBool()) {
+        attribute->set_kind(instruction::AttributeValueProto::b);
+        attribute->set_bool_value(val.toBool());
+      }
+      else if (val.isBoolList()) {
+        attribute->set_kind(instruction::AttributeValueProto::bs);
+        for (auto element : val.toBoolList()->elements()) {
+          attribute->add_bool_list(element);
+        }
+      }
+      else if (val.isNone()) {
+        attribute->set_kind(instruction::AttributeValueProto::n);
+      }
       else {
         throw std::runtime_error("Value type of Constant operator is not supported yet.");
       }

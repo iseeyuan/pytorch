@@ -49,11 +49,15 @@ IValue InstructionExecutor::run(Stack& stack) {
       for (const auto& attr : inst.attributes) {
         stack.push_back(attr);
       }
-    } else if (inst.name == "prim::Constant___") {
+    }
+    else if (inst.name == "prim::Constant___") {
       if (inst.attributes.empty()) {
         throw std::runtime_error("No values available for constant operator.");
       }
       stack.push_back(inst.attributes[0]);
+    }
+    else if (inst.name == "prim::Drop___") {
+      drop(stack, inst.inputs.size());
     }
     else {
       auto fc = c10::Dispatcher::singleton().findSchema(inst.name.c_str(), inst.overload_name.c_str());

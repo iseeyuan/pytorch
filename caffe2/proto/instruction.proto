@@ -16,7 +16,7 @@ message VariableProto {
 
 message AttributeValueProto {
   enum AttributKind {
-    f = 0; 
+    f = 0;  // double
     fs = 1; 
     i = 2; 
     is = 3; 
@@ -24,15 +24,28 @@ message AttributeValueProto {
     ss = 5;
     t = 6; 
     ts = 7; 
-    g = 8; 
-    gs = 9;
+    b = 8; // bool
+    bs = 9;
+    gs = 10; // GenericList
+    gd = 11; // GenericDict
+    tp = 12; // Tuple
+    blb = 13; // blob
+    ftr = 14; // future
+    dvc = 15; // device
+    obj = 16; // object
+    n = 17; //None
   }
   required AttributKind kind = 1;
-  optional float float_value = 2;
+  optional double float_value = 2;
   optional int64 int_value = 3;
   optional string string_value = 4;
   // if it's a tensor, the offset into the tensor table
   optional int64 tensor_id = 5;
+
+  repeated int64 int_list = 6;
+  repeated double float_list = 7;
+  optional bool bool_value = 8;
+  repeated bool bool_list = 9; 
 }
 
 message InstructionProto { //instruction
