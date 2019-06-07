@@ -17,11 +17,12 @@ int main(int argc, const char* argv[]) {
   std::vector<c10::IValue> inputs;
 //  inputs.push_back(torch::ones({}));
 //  inputs.push_back(torch::ones({1, 2}));
-//  inputs.push_back(torch::ones({1, 3, 224, 224}));
-  inputs.push_back(torch::ones({1, 10}));
+  inputs.push_back(torch::ones({1, 3, 224, 224}));
+//  inputs.push_back(torch::ones({1, 10}));
 
   torch::jit::InstructionExecutor executor(list);
   auto output = executor.run(inputs).toTensor();
+  std::cout << "output: \n";
   std::cout << output;
 ////  inputs.push_back(torch::ones({64, 100}));
 ////  inputs.push_back(torch::ones({1, 3, 224, 224}));

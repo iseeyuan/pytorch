@@ -4,6 +4,18 @@
 namespace torch {
 namespace jit {
 
+namespace {
+template <typename dtype> // int64_t, bool, double
+int listConstruct(Stack& stack, int64_t num_inputs) {
+  auto inputs = peekSlice(stack, 0, num_inputs, num_inputs);
+  std::vector<dtype> vals =
+      fmap(inputs, [](const IValue& v) { return v.to<dtype>(); });
+  drop(stack, num_inputs);
+  push(stack, std::move(vals));
+  return 0;
+}
+}
+
 InstructionExecutor::InstructionExecutor(std::shared_ptr<GenericInstructionList> ins_list)
     : ins_list(ins_list) {
   size_t register_size = 0;
@@ -33,15 +45,28 @@ IValue InstructionExecutor::run(Stack& stack) {
 
   while (pc < last) {
     auto& inst = instructions[pc];
-    std::cout << "executing " << pc << ": " << inst.name << std::endl;
+    std::cout << "executing " << pc << ": " << inst.name << "(";
+    for (int i = 0; i < inst.inputs.size(); ++i) {
+      if (i > 0)
+        std::cout << ", ";
+      std::cout << inst.inputs[i].unique_id;
+    }
+    std::cout << ") -> ";
+    for (int i = 0; i < inst.outputs.size(); ++i) {
+      if (i > 0)
+        std::cout << ", ";
+      std::cout << inst.outputs[i].unique_id;
+    }
+    std::cout << std::endl;
+
     loadTensorsFromRegisters(inst.inputs, stack);
 
-    std::cout << "stack:" << std::endl;
-    for (auto val : stack) {
-      std::cout << val << ", " << (int)val.isTensor() << std::endl;
-    }
+//    std::cout << "stack:" << std::endl;
+//    for (auto val : stack) {
+//      std::cout << val << ", " << (int)val.isTensor() << std::endl;
+//    }
 
-    // Currently we cannot pass constants to c10 kernels. One work-around
+  // Currently we cannot pass constants to c10 kernels. One work-around
     // is to register an operator for each constant. It may also make sense to
     // directly push constants to stack, without goint through the operator
     // registration route.
@@ -51,13 +76,47 @@ IValue InstructionExecutor::run(Stack& stack) {
       }
     }
     else if (inst.name == "prim::Constant___") {
-      if (inst.attributes.empty()) {
-        throw std::runtime_error("No values available for constant operator.");
+      if (inst.attributes.empty()) { // type None
+        stack.emplace_back();
       }
-      stack.push_back(inst.attributes[0]);
+      else {
+        stack.push_back(inst.attributes[0]);
+      }
     }
     else if (inst.name == "prim::Drop___") {
       drop(stack, inst.inputs.size());
+    }
+    else if (inst.name == "prim::ListConstruct___") {
+      const auto num_inputs = inst.inputs.size();
+      AT_ASSERT(inst.outputs.size() == 1);
+      size_t output_reg = inst.outputs[0].unique_id;
+      auto& output = registers[output_reg];
+
+      if (output.isIntList()) {
+        listConstruct<int64_t>(stack, num_inputs);
+      } else if (output.isDoubleList()) {
+        return listConstruct<double>(stack, num_inputs);
+      } else if (output.isBoolList()) {
+        return listConstruct<bool>(stack, num_inputs);
+      } else if (output.isTensorList()) {
+        const size_t stack_size = stack.size();
+        std::vector<at::Tensor> vals;
+        vals.reserve(num_inputs);
+        for (size_t i = stack_size - num_inputs; i < stack_size; ++i) {
+          vals.emplace_back(std::move(stack[i]).toTensor());
+        }
+        drop(stack, num_inputs);
+        push(stack, std::move(vals));
+      } else {
+        const size_t stack_size = stack.size();
+        std::vector<IValue> vals;
+        vals.reserve(num_inputs);
+        for (size_t i = stack_size - num_inputs; i < stack_size; ++i) {
+          vals.emplace_back(std::move(stack[i]));
+        }
+        drop(stack, num_inputs);
+        push(stack, std::move(vals));
+      }
     }
     else {
       auto fc = c10::Dispatcher::singleton().findSchema(inst.name.c_str(), inst.overload_name.c_str());
@@ -69,7 +128,7 @@ IValue InstructionExecutor::run(Stack& stack) {
     for (int i = inst.outputs.size() - 1; i >= 0; --i) {
       int reg = inst.outputs[i].unique_id;
       registers[reg] = pop(stack);
-      std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
+//      std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
     }
     ++pc;
   }

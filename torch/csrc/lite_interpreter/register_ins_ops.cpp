@@ -67,6 +67,11 @@ static auto registry0 = c10::RegisterOperators().op(
   c10::kernel<decltype(at::size), &at::size>(),
                                 c10::dispatchKey(at::CPUTensorId())
 ).op(
+  "aten::view_Tensor_int[]__Tensor",
+  c10::kernel([](at::Tensor a, c10::IntArrayRef list) ->at::Tensor {
+    return a.view(list);
+  })
+).op(
     "prim::Load___",
     c10::kernel([]() {
     })

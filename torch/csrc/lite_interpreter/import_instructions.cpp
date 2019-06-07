@@ -97,7 +97,7 @@ void InstructionsDeserializer::deserialize(std::shared_ptr<GenericInstructionLis
   std::string json_string = std::string(
       static_cast<char*>(data_ptr.get()),
       static_cast<char*>(data_ptr.get()) + data_size);
-  std::cout << json_string << std::endl;
+//  std::cout << json_string << std::endl;
 
   char *source = static_cast<char*>(data_ptr.get());
   char *endptr;
