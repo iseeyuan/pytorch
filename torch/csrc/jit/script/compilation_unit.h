@@ -57,6 +57,14 @@ struct TORCH_API Function : public std::enable_shared_from_this<Function> {
     run(stack);
   }
 
+  void saveInstructions(Stack& stack, size_t input_size, std::ostream& out) {
+    get_executor().saveInstructions(stack, input_size, out);
+  }
+
+  void saveInstructions(Stack&& stack, size_t input_size, std::ostream& out) {
+    saveInstructions(stack, input_size, out);
+  }
+
   IValue operator()(
       std::vector<IValue> stack,
       const Kwargs& kwargs = Kwargs()) {

@@ -9,6 +9,7 @@ struct ProfilingGraphExecutorImpl : public GraphExecutorImplBase {
 
   void run(Stack& stack) override;
   GraphExecutorState getDebugState() override;
+  void saveInstructions(Stack& inputs, size_t input_size, std::ostream& os) final;
   ~ProfilingGraphExecutorImpl() override = default;
 
  private:

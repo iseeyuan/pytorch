@@ -56,6 +56,19 @@ void Module::save(
   ExportModule(*this, filename, extra_files);
 }
 
+void Module::save_method(const std::string &method_name,
+                         const std::vector<IValue>& inputs,
+                         std::ostream &out) {
+  return get_method(method_name).saveInstructions(inputs, out);
+}
+
+void Module::save_method(const std::string &method_name,
+                         const std::vector<IValue>& inputs,
+                         const std::string& fileName) {
+  std::ofstream out(fileName, std::ofstream::out);
+  return get_method(method_name).saveInstructions(inputs, out);
+}
+
 void module_state_to(
     const Slot& s,
     const c10::optional<at::Device>& device,

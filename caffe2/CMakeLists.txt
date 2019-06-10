@@ -363,6 +363,7 @@ if (NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
     ${TORCH_SRC_DIR}/csrc/jit/attributes.cpp
     ${TORCH_SRC_DIR}/csrc/jit/argument_spec.cpp
     ${TORCH_SRC_DIR}/csrc/jit/export.cpp
+    ${TORCH_SRC_DIR}/csrc/jit/export_instructions.cpp
     ${TORCH_SRC_DIR}/csrc/jit/pass_manager.cpp
     ${TORCH_SRC_DIR}/csrc/jit/pickler.cpp
     ${TORCH_SRC_DIR}/csrc/jit/graph_executor.cpp
@@ -442,7 +443,7 @@ if (NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
     ${TORCH_SRC_DIR}/csrc/jit/fuser/executor.cpp
     ${TORCH_SRC_DIR}/csrc/jit/fuser/codegen.cpp
     ${TORCH_SRC_DIR}/csrc/jit/fuser/fallback.cpp
-    ${TORCH_ROOT}/test/cpp/jit/test.cpp
+    #${TORCH_ROOT}/test/cpp/jit/test.cpp
     )
 
   if (WIN32)
@@ -597,7 +598,7 @@ if (NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
       )
   else()
     target_compile_options(caffe2 PUBLIC
-      #    -std=c++11
+      -std=c++11
       -Wall
       -Wextra
       -Wno-unused-parameter

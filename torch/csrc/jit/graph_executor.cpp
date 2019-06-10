@@ -44,6 +44,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <ostream>
 
 namespace torch {
 namespace jit {
@@ -64,6 +65,10 @@ std::shared_ptr<Graph> lastExecutedOptimizedGraph() {
 void ExecutionPlan::run(Stack& stack) const {
   InterpreterState(code).run(stack);
   last_executed_optimized_graph = graph;
+}
+
+void ExecutionPlan::saveInstructions(Stack& stack, size_t input_size, std::ostream& os) const {
+  code.exportInstructions(stack, input_size, os);
 }
 
 namespace {
@@ -481,12 +486,7 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
 
   // entry point where execution begins
   void run(Stack& stack) override {
-    TORCH_CHECK(
-        stack.size() >= num_inputs,
-        "expected ",
-        num_inputs,
-        " inputs, but got only ",
-        stack.size());
+    checkInputNumber(stack);
 
     C10_LOG_API_USAGE_ONCE("torch.graph_executor.run");
     logging::getLogger()->addStatValue(
@@ -498,7 +498,16 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
 
     auto& execution_plan =
         optimize ? getOrCompile(stack) : getOrCompileFallback();
+
     return execution_plan.run(stack);
+  }
+
+  void saveInstructions(Stack& stack, size_t input_size, std::ostream& os) {
+    checkInputNumber(stack);
+
+    auto& execution_plan =
+        optimize ? getOrCompile(stack) : getOrCompileFallback();
+    return execution_plan.saveInstructions(stack, input_size, os);
   }
 
   GraphExecutorState getDebugState() override {
@@ -524,6 +533,15 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
       fallback = ExecutionPlan(graph_);
     }
     return fallback;
+  }
+
+  void checkInputNumber(const Stack& stack) {
+    AT_CHECK(
+        stack.size() >= num_inputs,
+        "expected ",
+        num_inputs,
+        " inputs, but got only ",
+        stack.size());
   }
 
   const ExecutionPlan& getOrCompile(const Stack& stack) {
@@ -597,6 +615,7 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
     } else {
       runNondiffOptimization(opt_graph);
     }
+
     // Make sure there are no leftovers from any passes.
     EliminateDeadCode(opt_graph);
     return ExecutionPlan(opt_graph);
@@ -715,6 +734,10 @@ GraphExecutor::GraphExecutor(std::shared_ptr<Graph> graph, bool optimize)
 
 void GraphExecutor::run(Stack& inputs) {
   return pImpl->run(inputs);
+}
+
+void GraphExecutor::saveInstructions(Stack& inputs, size_t input_size, std::ostream& os) {
+  return pImpl->saveInstructions(inputs, input_size, os);
 }
 
 std::shared_ptr<Graph> GraphExecutor::graph() const {

@@ -251,6 +251,40 @@ inline std::string toString(const FunctionSchema& schema) {
   return str.str();
 }
 
+inline std::string extendedName(const FunctionSchema& schema) {
+  std::ostringstream out;
+  out << schema.name();
+  out << "_";
+
+  bool seen_kwarg_only = false;
+  for(size_t i = 0; i < schema.arguments().size(); ++i) {
+    if (i > 0) out << "_";
+//    if (schema.arguments()[i].kwarg_only() && !seen_kwarg_only) {
+//      out << "*, ";
+//      seen_kwarg_only = true;
+//    }
+    out << schema.arguments()[i].type()->str();
+  }
+
+//  if(schema.is_vararg()) {
+//    if(schema.arguments().size() > 0)
+//      out << ", ";
+//    out << "...";
+//  }
+
+  out << "__";
+  if (schema.returns().size() == 1) {
+    out << schema.returns().at(0).type()->str();
+  } else if (schema.returns().size() > 1) {
+    for (size_t i = 0; i < schema.returns().size(); ++i) {
+      if (i > 0) out << "_";
+      out << schema.returns()[i].type()->str();
+    }
+  }
+
+  return out.str();
+}
+
 } // namespace c10
 
 #include <ATen/core/function_schema_inl.h>

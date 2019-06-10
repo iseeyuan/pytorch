@@ -12,6 +12,8 @@
 #include <torch/csrc/jit/ir.h>
 #include <torch/csrc/jit/operator.h>
 #include <torch/csrc/jit/script/jit_exception.h>
+#include <torch/csrc/jit/generic_instruction.h>
+#include <torch/csrc/jit/export_instructions.h>
 
 #include <exception>
 #include <iostream>
@@ -330,8 +332,9 @@ struct Instruction {
   Operation callback;
   UseList inputs;
   ListHandle<int> outputs;
-  Symbol debug_name; // used in dump to understand the generated code
+  c10::Symbol debug_name; // used in dump to understand the generated code
   c10::optional<SourceRange> debug_location; // for error reporting
+  std::string extended_name;
 };
 
 int relativeJump(int from_inst, int to_inst) {
@@ -487,6 +490,7 @@ struct CodeImpl {
         moveFlags(n),
         n->outputs());
     instructions[inst].callback = getOperation(n);
+    instructions[inst].extended_name = extendedName(n->schema());
     return inst;
   }
   size_t insertInstruction(
@@ -533,6 +537,48 @@ struct CodeImpl {
     // putting them in correct places.
     instructions[inst].callback = [](Stack& stack) { return 0; };
     return inst;
+  }
+
+  void exportInstructions(Stack& stack, size_t input_size, std::ostream& os) {
+    // Transform instructions to a more generic and easy to serialize format.
+    GenericInstructionList ginslist;
+    for (const auto& ins : instructions) {
+      ginslist.instructions.emplace_back();
+      auto& gins = ginslist.instructions.back();
+
+//      gins.name = ins.debug_name.toQualString();
+      gins.name = ins.extended_name;
+      gins.overload_name = ""; // TODO: get corresponding overload_name
+
+      // Change inputs and outputs ids to a more generic format:
+      // Each input/output has its own unique id and optionally free_flag.
+      // There's no pre-assumption of registers or continuous indexing map in int_data.
+      for (int i = 0; i < ins.inputs.values.size; ++i) {
+        gins.inputs.emplace_back();
+        auto& input = gins.inputs.back();
+        input.unique_id = get(ins.inputs.values, i);
+        input.free_flag = get(ins.inputs.free_flags, i);
+      }
+
+      // Outputs
+      for (int i = 0; i < ins.outputs.size; ++i) {
+        gins.outputs.emplace_back();
+        auto& output = gins.outputs.back();
+        output.unique_id = get(ins.outputs, i);
+      }
+
+      // Attributes
+      if (gins.name == "prim::Constant___") {
+        Stack outstack;
+        ins.callback(outstack);
+        gins.attributes.push_back(outstack.back());
+      } else if (gins.name == "prim::Load___") {
+        for (size_t i = input_size; i < stack.size(); ++i) {
+          gins.attributes.push_back(stack[i]);
+        }
+      }
+    }
+    ExportInstructions(ginslist, os);
   }
 
   // helpers to build/access RegList objects
@@ -672,17 +718,23 @@ struct InterpreterStateImpl : c10::intrusive_ptr_target {
     size_t last = instructions.size();
 
     while (pc < last) {
-      // std::cout << "executing " << pc << ": ";
-      // function->dumpInstruction(std::cout, pc);
-      // std::cout << "\n";
+      std::cout << "executing " << pc << ": ";
+      function->dumpInstruction(std::cout, pc);
+      std::cout << "\n";
       auto& inst = instructions[pc];
       try {
         loadTensorsFromRegisters(inst.inputs, stack);
+
+//        std::cout << "stack:" << std::endl;
+//        for (auto val : stack) {
+//          std::cout << val << ", " << (int)val.isTensor() << std::endl;
+//        }
+
         size_t new_pc = pc + 1 + inst.callback(stack);
         for (int i = inst.outputs.size - 1; i >= 0; --i) {
           int reg = get(inst.outputs, i);
           registers[reg] = pop(stack);
-          // std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
+//          std::cout << "pop reg[" << reg << "];\n" << registers[reg] << "\n";
         }
         pc = new_pc;
       } catch (Suspend& e) {
@@ -828,6 +880,10 @@ Code::~Code() = default;
 
 const std::vector<GraphExecutor*>& Code::grad_executors() {
   return pImpl->grad_executors();
+}
+
+void Code::exportInstructions(Stack& stack, size_t input_size, std::ostream& os) const {
+  pImpl->exportInstructions(stack, input_size, os);
 }
 
 InterpreterState::InterpreterState(const Code& code)

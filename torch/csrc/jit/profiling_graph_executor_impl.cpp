@@ -38,5 +38,8 @@ GraphExecutorState ProfilingGraphExecutorImpl::getDebugState() {
   AT_ERROR("not supported");
 }
 
+void ProfilingGraphExecutorImpl::saveInstructions(Stack& inputs, size_t input_size, std::ostream& os) {
+}
+
 } // namespace jit
 } // namespace torch

@@ -32,6 +32,7 @@
 #include <test/cpp/jit/test_save_load.h>
 #include <test/cpp/jit/test_subgraph_matcher.h>
 #include <test/cpp/jit/test_subgraph_utils.h>
+#include <test/cpp/jit/test_lite_executor.h>
 #include <torch/csrc/WindowsTorchApiMacro.h>
 
 using namespace torch::jit::script;
@@ -40,6 +41,7 @@ using namespace torch::jit::test;
 namespace torch {
 namespace jit {
 #define TH_FORALL_TESTS(_)         \
+  _(LiteExecutor)                  /*\
   _(ADFormulas)                    \
   _(Attributes)                    \
   _(Blocks)                        \
@@ -85,7 +87,7 @@ namespace jit {
   _(QualifiedName)                 \
   _(ClassImport)                   \
   _(ScriptObject)                  \
-  _(SaveExtraFilesHook)
+  _(SaveExtraFilesHook) */
 
 #define TH_FORALL_TESTS_CUDA(_) \
   _(ArgumentSpec)               \

@@ -22,7 +22,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <ostream>
+#include <fstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -84,6 +84,35 @@ struct TORCH_API Method {
     // use run rather than operator() to skip the second schema check.
     function_->run(std::move(stack));
     return stack.front();
+  }
+
+  void saveInstructions(
+      std::vector<IValue> stack,
+      const std::string& fileName) {
+    std::ofstream ofs(fileName, std::ofstream::out);
+    saveInstructions(stack, ofs);
+  }
+
+    void saveInstructions(
+      std::vector<IValue> stack,
+      std::ostream& out) {
+    // In instruction level, we don't know which values in stack is from original
+    // inputs, or constants from checkAndNormalizeInputs(), or from initial_ivalues_.
+    // We pass the original input size. When we export the instructions, we export
+    // the added constants to attributes of load instruction.
+    // At execution, we recover the full stack by appending the attributes in load.
+    // It may be a temp solution with minimum change inside jit.
+    size_t input_size = stack.size();
+
+    getSchema().checkAndNormalizeInputs(stack, Kwargs());
+    // TODO: for non-initial inputs, build the connection between inputs
+    // and parameters. T44033049
+    for (auto input : initial_ivalues_) {
+      push(stack, input.value());
+    }
+
+    // build and save instructions with attributes.
+    function_->saveInstructions(std::move(stack), input_size, out);
   }
 
   const std::vector<Slot>& initial_ivalues() const {
@@ -404,6 +433,16 @@ struct TORCH_API Module {
   void save(
       const std::string& filename,
       const ExtraFilesMap& extra_files = ExtraFilesMap());
+
+  void save_method(
+      const std::string& method_name,
+      const std::vector<IValue>& inputs,
+      std::ostream& out);
+
+  void save_method(
+      const std::string& method_name,
+      const std::vector<IValue>& inputs,
+      const std::string& filename);
 
   void copy_into(
       const ModuleLookup& module_lookup,
