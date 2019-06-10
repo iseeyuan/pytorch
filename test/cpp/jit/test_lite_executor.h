@@ -18,7 +18,7 @@ namespace torch {
 namespace jit {
 namespace test {
 
-void testLiteExecutor() {
+void testLiteExecutorAdd() {
   auto m = std::make_shared<script::Module>();
   m->register_parameter("foo", torch::ones({}), false);
   m->define(R"(
@@ -37,16 +37,17 @@ void testLiteExecutor() {
 //  m->save_method("add_it", inputs, "/Users/myuan/data/add_it.bc");
   // Load and execute
   std::shared_ptr<torch::jit::GenericInstructionList> list = torch::jit::loadInstructionList(ss);
-  torch::jit::InstructionExecutor executor(list);
-  auto res = executor.run(inputs);
+  IValue res;
+  for (int i = 0; i < 3; ++i) {
+    auto bcinputs = inputs;
+    torch::jit::InstructionExecutor executor(list);
+    res = executor.run(bcinputs);
+    std::cout << "output: " << std::endl;
+    std::cout << res.toTensor().item<float>();
+    std::cout << std::endl;
+  }
 
   AT_ASSERT(res.toTensor().item<float>() == ref.toTensor().item<float>());
-
-  // TODO:
-  // 1. Load ss to a InstructionList
-  // 2. Execute InstructionList
-  // 3. Compare the result to n->run_method("add_it", torch::ones({})).toTensor()
-//  AT_ASSERT(!ss.str().empty());
 }
 
 } // namespace test
