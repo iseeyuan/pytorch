@@ -41,7 +41,7 @@ using namespace torch::jit::test;
 namespace torch {
 namespace jit {
 #define TH_FORALL_TESTS(_)         \
-  _(LiteExecutor)                  /*\
+  _(LiteExecutorAdd)              /*\
   _(ADFormulas)                    \
   _(Attributes)                    \
   _(Blocks)                        \
