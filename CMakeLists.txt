@@ -558,5 +558,7 @@ if (BUILD_BINARY)
   add_subdirectory(binaries)
 endif()
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/torch/csrc/lite_interpreter)
+
 include(cmake/Summary.cmake)
 caffe2_print_configuration_summary()
