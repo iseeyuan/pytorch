@@ -1191,6 +1191,11 @@ void ExportModule(
     const script::ExtraFilesMap& extra_files) {
   ScriptModuleSerializer serializer(filename);
   serializer.serialize(module, extra_files);
+
+  auto method = module.get_method("forward");
+//  method.function().get_executor().getframe();
+//  ByteCodeModuleSerializer bcserializer(filename + ".bc");
+//  bcserializer.serialize(module, extra_files);
 }
 
 } // namespace jit

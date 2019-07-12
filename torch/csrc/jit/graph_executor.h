@@ -15,7 +15,9 @@ struct Code;
 struct ExecutionPlan {
   ExecutionPlan() = default;
   ExecutionPlan(std::shared_ptr<Graph> graph)
-      : code(graph), graph(std::move(graph)) {}
+      : code(graph), graph(std::move(graph)) {
+    std::cout << code << std::endl;
+  }
 
   operator bool() const {
     return static_cast<bool>(graph);
