@@ -18,6 +18,7 @@
 #include <torch/csrc/autograd/function.h>
 #include <torch/csrc/jit/script/compiler.h>
 #include <torch/csrc/jit/script/logging.h>
+#include <torch/csrc/liteinterpreter/frameoutput.h>
 
 #include <cstdint>
 #include <iterator>
@@ -99,6 +100,10 @@ struct GraphExecutorImplBase {
     for (size_t i = 0; i < outputs.size(); ++i) {
       tracer::setValueTrace(outputs[i], output_values[i]);
     }
+  }
+
+  virtual std::unique_ptr<FrameOutput> getFrame() const {
+    return nullptr;
   }
 
   virtual ExecutionPlan getPlanFor(Stack& stack) = 0;

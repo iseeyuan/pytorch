@@ -481,6 +481,13 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
     return optimize ? getOrCompile(stack) : getOrCompileFallback();
   }
 
+  std::unique_ptr<FrameOutput> getFrame() const override final {
+    if (plan_cache.empty()) {
+      return nullptr;
+    }
+    return plan_cache.begin()->second.code.getFrame();
+  }
+
   GraphExecutorState getDebugState() override {
     GraphExecutorState state;
     state.graph = graph.get();
@@ -608,6 +615,10 @@ void GraphExecutor::run(Stack& inputs) {
 
 ExecutionPlan GraphExecutor::getPlanFor(Stack& inputs) {
   return pImpl->getPlanFor(inputs);
+}
+
+std::unique_ptr<FrameOutput> GraphExecutor::getFrame() {
+  return pImpl->getFrame();
 }
 
 std::shared_ptr<Graph> GraphExecutor::graph() const {

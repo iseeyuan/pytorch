@@ -14,6 +14,7 @@
 #include <torch/csrc/jit/instruction.h>
 #include <torch/csrc/jit/operator.h>
 #include <torch/csrc/jit/passes/bailout_graph.h>
+#include <torch/csrc/liteinterpreter/frameoutput.h>
 #include <torch/csrc/jit/script/compilation_unit.h>
 #include <torch/csrc/jit/script/jit_exception.h>
 
@@ -31,6 +32,8 @@
 
 namespace torch {
 namespace jit {
+
+std::ostream& operator<<(std::ostream& out, Instruction inst);
 
 // Before we translate to intepreter instructions, we do
 // some preprocessing of the graph to turn it into a form that is closer
@@ -294,7 +297,6 @@ struct PreprocessGraph {
   std::unordered_map<Node*, bool> can_emit_inline;
 };
 
-
 // for keeping track of the current node
 struct WithCurrentNode {
   WithCurrentNode(Node** loc, Node* new_value) : loc_(loc), old_value_(*loc_) {
@@ -374,7 +376,7 @@ struct CodeImpl {
     insertBailoutBlocks();
   }
 
-  void insertInstruction(OpCode op, int64_t X = 0, uint64_t N = 0) {
+  void insertInstruction(OperatorCode op, int64_t X = 0, uint64_t N = 0) {
     instructions_.emplace_back(op, X, N);
     instructions_source_.emplace_back(current_node_);
 
@@ -437,7 +439,7 @@ struct CodeImpl {
       int reg = registerFor(input);
       bool moved = input->uses().size() == ++use_count_[input];
 
-      OpCode op;
+      OperatorCode op;
       if (input->node()->kind() == prim::Constant) {
         op = LOADC;
       } else if (drop) {
@@ -659,6 +661,15 @@ struct CodeImpl {
       }
     }
     return *grad_executors_;
+  }
+
+  std::unique_ptr<FrameOutput> getFrame() const {
+    std::unique_ptr<FrameOutput> frameptr(new FrameOutput);
+    frameptr->pc = 0;
+    frameptr->instructions = instructions_;
+    frameptr->constants = constant_table_;
+    frameptr->operators = operator_table_;
+    return frameptr;
   }
 
   void dump(std::ostream& out, size_t i) const {
@@ -1032,6 +1043,10 @@ size_t Code::num_inputs() const {
 
 size_t Code::num_outputs() const {
   return pImpl->n_outputs;
+}
+
+std::unique_ptr<FrameOutput> Code::getFrame() const {
+  return pImpl->getFrame();
 }
 
 InterpreterState::InterpreterState(const Code& code)

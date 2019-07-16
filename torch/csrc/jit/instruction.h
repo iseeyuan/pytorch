@@ -1,4 +1,5 @@
 #pragma once
+#include <typeinfo>
 
 namespace torch {
 namespace jit {
@@ -31,57 +32,35 @@ namespace jit {
   _(GUARD, "T") /* check guard against type_table, true if passes */        \
   _(TAIL_CALL, "F") /* replace current frame with function F */
 
-enum OpCode : uint8_t {
+enum OperatorCode : uint8_t {
 #define DEFINE_OP(op, _) op,
   FORALL_OPCODES(DEFINE_OP)
 #undef DEFINE_OP
 };
 
-std::ostream& operator<<(std::ostream& out, OpCode op) {
-  switch (op) {
-#define OP_STRING(x, _) \
-  case x:               \
-    return out << #x;
-    FORALL_OPCODES(OP_STRING)
-#undef OP_STRING
-  }
-  return out;
-}
-
-const char* OpInfo(OpCode op) {
-  switch (op) {
-#define OP_INFO(x, info) \
-  case x:                \
-    return info;
-    FORALL_OPCODES(OP_INFO)
-#undef OP_INFO
-  }
-  return nullptr;
-}
-
 struct Instruction {
-  OpCode op;
+  OperatorCode op;
   uint8_t padding; // currently unused
   uint16_t N;
   int32_t X;
   // TODO: check for overflow
-  Instruction(OpCode op, int32_t X, uint16_t N)
+  Instruction(OperatorCode op, int32_t X, uint16_t N)
       : op(op), padding(0), N(N), X(X) {}
 };
 
-static_assert(sizeof(Instruction) == 8, "Instructions should be 8 bytes");
-std::ostream& operator<<(std::ostream& out, Instruction inst) {
-  // TODO: use op info to print out the op in a more user-friendly way
-  int nargs = strlen(OpInfo(inst.op));
-  out << inst.op;
-  if (nargs > 0) {
-    out << " " << inst.X;
-  }
-  if (nargs > 1) {
-    out << " " << inst.N;
-  }
-  return out;
-}
+//static_assert(sizeof(Instruction) == 8, "Instructions should be 8 bytes");
+//std::ostream& operator<<(std::ostream& out, Instruction inst) {
+//  // TODO: use op info to print out the op in a more user-friendly way
+//  int nargs = strlen(OpInfo(inst.op));
+//  out << inst.op;
+//  if (nargs > 0) {
+//    out << " " << inst.X;
+//  }
+//  if (nargs > 1) {
+//    out << " " << inst.N;
+//  }
+//  return out;
+//}
 
 }
 }

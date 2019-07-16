@@ -38,11 +38,13 @@ struct GraphExecutorState {
 };
 
 struct GraphExecutorImplBase;
+struct FrameOutput;
 struct TORCH_API GraphExecutor {
   GraphExecutor() = default;
   GraphExecutor(std::shared_ptr<Graph> graph, bool optimize = true);
   void run(Stack& inputs);
   ExecutionPlan getPlanFor(Stack& inputs);
+  std::unique_ptr<FrameOutput> getFrame();
   explicit operator bool() const {
     return pImpl != nullptr;
   }

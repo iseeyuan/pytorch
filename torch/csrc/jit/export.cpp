@@ -12,6 +12,7 @@
 #include <torch/csrc/jit/passes/python_print.h>
 #include <torch/csrc/jit/pickler.h>
 #include <torch/csrc/jit/source_range_serialization.h>
+#include <torch/csrc/liteinterpreter/frameoutput.h>
 
 #include <caffe2/core/types.h>
 #include <caffe2/proto/caffe2_pb.h>
@@ -1193,9 +1194,12 @@ void ExportModule(
   serializer.serialize(module, extra_files);
 
   auto method = module.get_method("forward");
-//  method.function().get_executor().getframe();
-//  ByteCodeModuleSerializer bcserializer(filename + ".bc");
-//  bcserializer.serialize(module, extra_files);
+
+  auto frame = method.function().get_executor().getFrame();
+  if (frame != nullptr) {
+    //  ByteCodeModuleSerializer bcserializer(filename + ".bc");
+    //  bcserializer.serialize(module, extra_files);
+  }
 }
 
 } // namespace jit
