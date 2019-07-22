@@ -47,20 +47,5 @@ struct Instruction {
   Instruction(OperatorCode op, int32_t X, uint16_t N)
       : op(op), padding(0), N(N), X(X) {}
 };
-
-//static_assert(sizeof(Instruction) == 8, "Instructions should be 8 bytes");
-//std::ostream& operator<<(std::ostream& out, Instruction inst) {
-//  // TODO: use op info to print out the op in a more user-friendly way
-//  int nargs = strlen(OpInfo(inst.op));
-//  out << inst.op;
-//  if (nargs > 0) {
-//    out << " " << inst.X;
-//  }
-//  if (nargs > 1) {
-//    out << " " << inst.N;
-//  }
-//  return out;
-//}
-
 }
 }

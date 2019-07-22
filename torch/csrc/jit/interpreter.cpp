@@ -332,6 +332,10 @@ struct CodeImpl {
 
   std::vector<IValue> constant_table_;
   std::vector<Operation> operator_table_;
+  // One way to have operator names for debugging/dumping purpose. Because it's only
+  // available from node, we add schema name to the list when operators are emitted.
+  // Any other solutions?
+  std::vector<c10::OperatorName> opname_table_;
   std::vector<Function*> function_table_;
   std::vector<TypePtr> type_table_;
   int register_size_ = 0;
@@ -463,6 +467,10 @@ struct CodeImpl {
     emitLoadInputs(node->inputs());
     insertInstruction(OP, operator_table_.size());
     operator_table_.emplace_back(getOperation(node));
+    // Looks like all overload_names are empty? If the name is not unique,
+    // use inline std::ostream& operator<<(std::ostream& out, const FunctionSchema& schema)
+    // as a backup.
+    opname_table_.emplace_back(node->schema().operator_name());
   }
 
   void emitWait(Node* node) {
@@ -668,6 +676,7 @@ struct CodeImpl {
     frameptr->pc = 0;
     frameptr->instructions = instructions_;
     frameptr->constants = constant_table_;
+    frameptr->opnames = opname_table_;
     frameptr->operators = operator_table_;
     return frameptr;
   }

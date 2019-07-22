@@ -7,7 +7,7 @@ package bytecode;
 message InstructionProto { //instruction
   required string opCode = 1; 
   required uint32 N = 2;
-  repeated int32 X =3;
+  required int32 X =3;
   // padding?
 }
 

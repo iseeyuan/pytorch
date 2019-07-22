@@ -2,12 +2,11 @@
 #include <torch/csrc/jit/instruction.h>
 #include <memory>
 #include <vector>
-
-//#include <torch/csrc/WindowsTorchApiMacro.h>
 #include <ATen/core/ivalue.h>
 #include <torch/csrc/jit/source_range.h>
 #include <ATen/core/stack.h>
 #include <ATen/core/interned_strings.h>
+#include <ATen/core/function_schema.h>
 
 namespace torch {
 namespace jit {
@@ -31,6 +30,7 @@ struct FrameOutput {
   size_t pc;
   std::vector<Instruction> instructions;
   std::vector<IValue> constants;
+  std::vector<c10::OperatorName> opnames;
   std::vector<Operation> operators;
 };
 
