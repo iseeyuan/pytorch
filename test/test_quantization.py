@@ -1,176 +1,63 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+import unittest
 import torch
 import torch.nn.quantized as nnq
-from torch.quantization import QuantWrapper, QuantStub, DeQuantStub, \
-    default_eval_fn, QConfig, default_qconfig, default_observer, quantize, \
-    prepare, convert
+from torch.quantization import \
+    quantize, prepare, convert, prepare_qat, quantize_qat, fuse_modules
 
-from common_utils import TestCase, run_tests
+from common_utils import run_tests, TEST_WITH_UBSAN
+from common_quantization import QuantizationTestCase, SingleLayerLinearModel, \
+    SkipQuantModel, QuantStubModel, \
+    ModForFusion, ManualLinearQATModel, ManualConvLinearQATModel, test_only_eval_fn, test_only_train_fn
 
-class SingleLayerLinearModel(torch.nn.Module):
-    def __init__(self):
-        super(SingleLayerLinearModel, self).__init__()
-        self.fc1 = torch.nn.Linear(5, 5).to(dtype=torch.float)
+from common_quantization import AnnotatedTwoLayerLinearModel, AnnotatedNestedModel, \
+    AnnotatedSubNestedModel, AnnotatedCustomConfigNestedModel
 
-    def forward(self, x):
-        x = self.fc1(x)
-        return x
-
-class TwoLayerLinearModel(torch.nn.Module):
-    def __init__(self):
-        super(TwoLayerLinearModel, self).__init__()
-        self.fc1 = torch.nn.Linear(5, 8).to(dtype=torch.float)
-        self.fc2 = torch.nn.Linear(8, 5).to(dtype=torch.float)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.fc2(x)
-        return x
-
-class LinearReluModel(torch.nn.Module):
-    def __init__(self):
-        super(LinearReluModel, self).__init__()
-        self.fc = torch.nn.Linear(5, 5).to(dtype=torch.float)
-        self.relu = torch.nn.ReLU()
-
-    def forward(self, x):
-        x = self.relu(self.fc(x))
-        return x
-
-class NestedModel(torch.nn.Module):
-    def __init__(self):
-        super(NestedModel, self).__init__()
-        self.sub1 = LinearReluModel()
-        self.sub2 = TwoLayerLinearModel()
-        self.fc3 = torch.nn.Linear(5, 5).to(dtype=torch.float)
-
-    def forward(self, x):
-        x = self.sub1(x)
-        x = self.sub2(x)
-        x = self.fc3(x)
-        return x
-
-class InnerModule(torch.nn.Module):
-    def __init__(self):
-        super(InnerModule, self).__init__()
-        self.fc1 = torch.nn.Linear(5, 8).to(dtype=torch.float)
-        self.relu = torch.nn.ReLU()
-        self.fc2 = torch.nn.Linear(8, 5).to(dtype=torch.float)
-
-    def forward(self, x):
-        return self.relu(self.fc2(self.relu(self.fc1(x))))
-
-class WrappedModel(torch.nn.Module):
-    def __init__(self):
-        super(WrappedModel, self).__init__()
-        self.qconfig = default_qconfig
-        self.sub = QuantWrapper(InnerModule())
-        self.fc = torch.nn.Linear(5, 5).to(dtype=torch.float)
-        # don't quantize this fc
-        self.fc.qconfig = None
-
-    def forward(self, x):
-        return self.fc(self.sub(x))
-
-class ManualQuantModel(torch.nn.Module):
-    r"""A Module with manually inserted `QuantStub` and `DeQuantStub`
-    """
-    def __init__(self):
-        super(ManualQuantModel, self).__init__()
-        self.qconfig = default_qconfig
-        self.quant = QuantStub()
-        self.dequant = DeQuantStub()
-        self.fc = torch.nn.Linear(5, 5).to(dtype=torch.float)
-
-    def forward(self, x):
-        x = self.quant(x)
-        x = self.fc(x)
-        return self.dequant(x)
-
-calib_data = [torch.rand(20, 5, dtype=torch.float) for _ in range(20)]
-
-class ModelQuantizeAPITest(TestCase):
-
-    def checkNoPrepModules(self, module):
-        r"""Checks the module does not contain child
-            modules for quantization prepration, e.g.
-            quant, dequant and observer
-        """
-        self.assertFalse(hasattr(module, 'quant'))
-        self.assertFalse(hasattr(module, 'dequant'))
-
-    def checkHasPrepModules(self, module):
-        r"""Checks the module contains child
-            modules for quantization prepration, e.g.
-            quant, dequant and observer
-        """
-        self.assertTrue(hasattr(module, 'module'))
-        self.assertTrue(hasattr(module, 'quant'))
-        self.assertTrue(hasattr(module, 'dequant'))
-
-    def checkObservers(self, module):
-        if hasattr(module, 'qconfig') and module.qconfig is not None and len(module._modules) == 0:
-            self.assertTrue(hasattr(module, 'observer'))
-        for child in module.children():
-            self.checkObservers(child)
-
-    def checkQuantDequant(self, mod):
-        self.assertEqual(type(mod.quant), nnq.Quantize)
-        self.assertEqual(type(mod.dequant), nnq.DeQuantize)
-
-    def checkQuantizedLinear(self, mod):
-        self.assertEqual(type(mod.module), nnq.Linear)
-        self.assertEqual(mod.module.bias.dtype, torch.qint32)
-        self.checkQuantDequant(mod)
-
-    def checkLinear(self, mod):
-        self.assertEqual(type(mod), torch.nn.Linear)
-
+@unittest.skipIf(TEST_WITH_UBSAN or not torch.fbgemm_is_cpu_supported(),
+                 'Quantization requires FBGEMM. FBGEMM does not play'
+                 ' well with UBSAN at the moment, so we skip the test if'
+                 ' we are in a UBSAN environment.')
+class PostTrainingQuantTest(QuantizationTestCase):
     def test_single_layer(self):
         r"""Quantize SingleLayerLinearModel which has one Linear module, make sure it is swapped
         to nnq.Linear which is the quantized version of the module
         """
         model = SingleLayerLinearModel()
-        qconfig_dict = {
-            '': default_qconfig
-        }
-        model = prepare(model, qconfig_dict)
+        model = prepare(model)
         # Check if observers and quant/dequant nodes are inserted
         self.checkNoPrepModules(model)
         self.checkHasPrepModules(model.fc1)
         self.checkObservers(model)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             self.checkNoPrepModules(model)
             self.checkHasPrepModules(model.fc1)
-            self.checkQuantizedLinear(model.fc1)
-            default_eval_fn(model, calib_data)
+            self.checkWrappedQuantizedLinear(model.fc1)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(SingleLayerLinearModel(), default_eval_fn, calib_data, qconfig_dict)
+        model = quantize(SingleLayerLinearModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
     def test_two_layers(self):
         r"""TwoLayerLinearModel has two Linear modules but we only quantize the second one
         `fc2`, and `fc1`is not quantized
         """
-        model = TwoLayerLinearModel()
-        qconfig_dict = {
-            'fc2': default_qconfig
-        }
-        model = prepare(model, qconfig_dict)
+        model = AnnotatedTwoLayerLinearModel()
+        model = prepare(model)
 
         self.checkNoPrepModules(model)
         self.checkObservers(model)
         self.checkNoPrepModules(model.fc1)
         self.checkHasPrepModules(model.fc2)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
@@ -178,24 +65,20 @@ class ModelQuantizeAPITest(TestCase):
             self.checkNoPrepModules(model.fc1)
             self.checkHasPrepModules(model.fc2)
             self.assertEqual(type(model.fc1), torch.nn.Linear)
-            self.checkQuantizedLinear(model.fc2)
-            default_eval_fn(model, calib_data)
+            self.checkWrappedQuantizedLinear(model.fc2)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(TwoLayerLinearModel(), default_eval_fn, calib_data, qconfig_dict)
+        model = quantize(AnnotatedTwoLayerLinearModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
     def test_nested1(self):
         r"""Test quantization for nested model, top level 'fc3' and
         'fc1' of submodule 'sub2', 'sub2.fc2' is not quantized
         """
-        model = NestedModel()
-        qconfig_dict = {
-            'fc3': default_qconfig,
-            'sub2.fc1': default_qconfig
-        }
+        model = AnnotatedNestedModel()
 
         def checkPrepModules(model, before_calib=False):
             if before_calib:
@@ -209,39 +92,29 @@ class ModelQuantizeAPITest(TestCase):
             self.checkNoPrepModules(model.sub2.fc2)
             self.checkHasPrepModules(model.fc3)
 
-        model = prepare(model, qconfig_dict)
+        model = prepare(model)
         checkPrepModules(model, True)
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             checkPrepModules(model)
             self.checkLinear(model.sub1.fc)
-            self.checkQuantizedLinear(model.fc3)
-            self.checkQuantizedLinear(model.sub2.fc1)
+            self.checkWrappedQuantizedLinear(model.fc3)
+            self.checkWrappedQuantizedLinear(model.sub2.fc1)
             self.checkLinear(model.sub2.fc2)
-            default_eval_fn(model, calib_data)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(NestedModel(), default_eval_fn, calib_data, qconfig_dict)
+        model = quantize(AnnotatedNestedModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
 
     def test_nested2(self):
-        r"""Another test case for quantized, we will quantize all submodules
-        of submodule sub2, this will include redundant quant/dequant, to
-        remove them we need to manually call QuantWrapper or insert
-        QuantStub/DeQuantStub, see `test_quant_dequant_wrapper` and
-        `test_manual`
-        """
-        model = NestedModel()
-        qconfig_dict = {
-            'fc3': default_qconfig,
-            'sub2': default_qconfig
-        }
-        model = prepare(model, qconfig_dict)
+        model = AnnotatedSubNestedModel()
+        model = prepare(model)
 
         def checkPrepModules(model, before_calib=False):
             if before_calib:
@@ -250,48 +123,37 @@ class ModelQuantizeAPITest(TestCase):
             self.checkNoPrepModules(model.sub1)
             self.checkNoPrepModules(model.sub1.fc)
             self.checkNoPrepModules(model.sub1.relu)
-            self.checkNoPrepModules(model.sub2)
-            self.checkHasPrepModules(model.sub2.fc1)
-            self.checkHasPrepModules(model.sub2.fc2)
+            self.checkHasPrepModules(model.sub2)
+            self.checkNoPrepModules(model.sub2.module.fc1)
+            self.checkNoPrepModules(model.sub2.module.fc2)
             self.checkHasPrepModules(model.fc3)
 
         checkPrepModules(model, True)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             checkPrepModules(model)
             self.checkLinear(model.sub1.fc)
             self.assertEqual(type(model.sub1.relu), torch.nn.ReLU)
-            self.checkQuantizedLinear(model.sub2.fc1)
-            self.checkQuantizedLinear(model.sub2.fc2)
-            self.checkQuantizedLinear(model.fc3)
-            default_eval_fn(model, calib_data)
+            self.checkQuantizedLinear(model.sub2.module.fc1)
+            self.checkQuantizedLinear(model.sub2.module.fc2)
+            self.checkWrappedQuantizedLinear(model.fc3)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(NestedModel(), default_eval_fn, calib_data, qconfig_dict)
+        model = quantize(AnnotatedSubNestedModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
     def test_nested3(self):
         r"""More complicated nested test case with child qconfig overrides
         parent qconfig
         """
-        model = NestedModel()
-        custum_options = {
-            'dtype': torch.quint8,
-            'qscheme': torch.per_tensor_affine
-        }
-        custom_qconfig = QConfig(weight=default_observer(),
-                                 activation=default_observer(**custum_options))
-        qconfig_dict = {
-            'fc3': default_qconfig,
-            'sub2': default_qconfig,
-            'sub2.fc1': custom_qconfig
-        }
-        model = prepare(model, qconfig_dict)
+        model = AnnotatedCustomConfigNestedModel()
+        model = prepare(model)
 
         def checkPrepModules(model, before_calib=False):
             if before_calib:
@@ -307,48 +169,45 @@ class ModelQuantizeAPITest(TestCase):
 
         checkPrepModules(model, True)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             checkPrepModules(model)
-            self.checkQuantizedLinear(model.sub2.fc1)
-            self.checkQuantizedLinear(model.sub2.fc2)
-            self.checkQuantizedLinear(model.fc3)
-            default_eval_fn(model, calib_data)
+            self.checkWrappedQuantizedLinear(model.sub2.fc1)
+            self.checkWrappedQuantizedLinear(model.sub2.fc2)
+            self.checkWrappedQuantizedLinear(model.fc3)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(NestedModel(), default_eval_fn, calib_data, qconfig_dict)
+        model = quantize(AnnotatedCustomConfigNestedModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
-    def test_quant_wrapper(self):
-        r"""User need to modify the original code with QuantWrapper,
-        and call the quantization utility functions.
+    def test_skip_quant(self):
+        r"""The case when we want to skip quantizing some layers
         """
-        model = WrappedModel()
 
-        # since we didn't provide qconfig_dict, the model is modified inplace
-        # but we can do `model = prepare(model)` as well
+        model = SkipQuantModel()
         prepare(model)
         self.checkObservers(model)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             self.checkLinear(model.fc)
             self.checkQuantDequant(model.sub)
-            self.assertEqual(type(model.sub.module.fc1), nnq.Linear)
-            self.assertEqual(type(model.sub.module.fc2), nnq.Linear)
+            self.checkQuantizedLinear(model.sub.module.fc1)
+            self.checkQuantizedLinear(model.sub.module.fc2)
             self.assertEqual(type(model.sub.module.relu), nnq.ReLU)
-            default_eval_fn(model, calib_data)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(WrappedModel(), default_eval_fn, calib_data, {})
+        model = quantize(SkipQuantModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
 
 
@@ -356,24 +215,129 @@ class ModelQuantizeAPITest(TestCase):
         r"""User inserts QuantStub and DeQuantStub in model code
         and call the quantization utility functions.
         """
-        model = ManualQuantModel()
+        model = QuantStubModel()
         # propagate the qconfig of parents to children, model is changed
         # inplace
         prepare(model)
         self.checkObservers(model)
 
-        default_eval_fn(model, calib_data)
+        test_only_eval_fn(model, self.calib_data)
         convert(model)
 
         def checkQuantized(model):
             self.assertEqual(type(model.fc), nnq.Linear)
-            default_eval_fn(model, calib_data)
+            test_only_eval_fn(model, self.calib_data)
 
         checkQuantized(model)
 
         # test one line API
-        model = quantize(ManualQuantModel(), default_eval_fn, calib_data)
+        model = quantize(QuantStubModel(), test_only_eval_fn, self.calib_data)
         checkQuantized(model)
+
+@unittest.skipIf(TEST_WITH_UBSAN or not torch.fbgemm_is_cpu_supported(),
+                 'Quantization requires FBGEMM. FBGEMM does not play'
+                 ' well with UBSAN at the moment, so we skip the test if'
+                 ' we are in a UBSAN environment.')
+class QuantizationAwareTrainingTest(QuantizationTestCase):
+    def test_manual(self):
+        model = ManualLinearQATModel()
+        model = prepare_qat(model)
+        self.checkObservers(model)
+        test_only_train_fn(model, self.train_data)
+        convert(model)
+
+        def checkQuantized(model):
+            self.assertEqual(type(model.fc1), nnq.Linear)
+            self.assertEqual(type(model.fc2), nnq.Linear)
+            test_only_eval_fn(model, self.calib_data)
+        checkQuantized(model)
+
+        model = quantize_qat(ManualLinearQATModel(), test_only_train_fn, self.train_data)
+        checkQuantized(model)
+
+    def test_eval_only_fake_quant(self):
+        r"""Using FakeQuant in evaluation only mode,
+        this is useful for estimating accuracy loss when we quantize the
+        network
+        """
+        model = ManualLinearQATModel()
+
+        model = prepare_qat(model)
+        self.checkObservers(model)
+
+        model.eval()
+        test_only_eval_fn(model, self.calib_data)
+
+    def test_conv_linear(self):
+        model = ManualConvLinearQATModel()
+
+        model = prepare_qat(model)
+        self.checkObservers(model)
+
+        test_only_train_fn(model, self.img_data)
+        convert(model)
+
+        def checkQuantized(model):
+            self.assertEqual(type(model.conv), nnq.Conv2d)
+            self.assertEqual(type(model.fc1), nnq.Linear)
+            self.assertEqual(type(model.fc2), nnq.Linear)
+            test_only_eval_fn(model, self.img_data)
+
+        checkQuantized(model)
+
+        model = ManualConvLinearQATModel()
+        model = quantize_qat(model, test_only_train_fn, self.img_data)
+        checkQuantized(model)
+
+
+class FusionTest(QuantizationTestCase):
+    def test_fuse_module_train(self):
+        import torch.nn._intrinsic.modules.fused as torch_fused
+        testMod = ModForFusion()
+        testMod.train()
+        fuse_modules(testMod, [['conv1', 'bn1', 'relu1'],
+                               ['sub1.conv', 'sub1.bn']])
+        self.assertEqual(type(testMod.conv1), torch_fused.ConvBnReLU2d,
+                         "Fused Conv + BN + Relu first layer")
+        self.assertEqual(type(testMod.bn1), torch.nn.Identity,
+                         "Fused Conv + BN + Relu (skipped BN)")
+        self.assertEqual(type(testMod.relu1), torch.nn.Identity,
+                         "Fused Conv + BN + Relu (skipped Relu)")
+
+        self.assertEqual(type(testMod.sub1.conv), torch_fused.ConvBn2d,
+                         "Fused submodule Conv + BN")
+        self.assertEqual(type(testMod.sub1.bn), torch.nn.Identity,
+                         "Fused submodule Conv + BN (skipped BN)")
+        self.assertEqual(type(testMod.sub2.conv), torch.nn.Conv2d,
+                         "Non-fused submodule Conv")
+        self.assertEqual(type(testMod.sub2.bn), torch.nn.BatchNorm2d,
+                         "Non-fused submodule BN")
+
+    def test_fuse_module_eval(self):
+        import torch.nn._intrinsic.modules.fused as torch_fused
+        testMod = ModForFusion()
+        testMod.eval()
+        fuse_modules(testMod, [['conv1', 'bn1', 'relu1'] ,
+                               ['sub1.conv', 'sub1.bn']])
+        self.assertEqual(type(testMod.conv1), torch_fused.ConvReLU2d,
+                         "Fused Conv + BN + Relu first layer (BN is folded)")
+        self.assertEqual(type(testMod.conv1[0]), torch.nn.Conv2d,
+                         "Fused Conv + BN + Relu (Conv + folded BN only)")
+        self.assertEqual(type(testMod.conv1[1]), torch.nn.ReLU,
+                         "Fused Conv + BN + Relu second layer (Relu only)")
+        self.assertEqual(type(testMod.bn1), torch.nn.Identity,
+                         "Fused Conv + BN + Relu second layer (Skipped BN)")
+        self.assertEqual(type(testMod.relu1), torch.nn.Identity,
+                         "Fused Conv + BN + Relu second layer (Skipped Relu)")
+
+        self.assertEqual(type(testMod.sub1.conv), torch.nn.Conv2d,
+                         "Fused submodule Conv + folded BN")
+        self.assertEqual(type(testMod.sub1.bn), torch.nn.Identity,
+                         "Fused submodule (skipped BN)")
+        self.assertEqual(type(testMod.sub2.conv), torch.nn.Conv2d,
+                         "Non-fused submodule Conv")
+        self.assertEqual(type(testMod.sub2.bn), torch.nn.BatchNorm2d,
+                         "Non-fused submodule BN")
 
 
 if __name__ == '__main__':
