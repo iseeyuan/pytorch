@@ -899,14 +899,13 @@ class ByteCodeSerializer final {
   ByteCodeSerializer(const std::string& filename);
   ByteCodeSerializer(std::ostream* ofs);
 
-  void serialize(const FrameOutput& frame);
+  void serialize(const script::Module& module);
 
  private:
+  void addConstant(const IValue& val, bytecode::FrameProto& frame_proto,
+                   size_t tensor_id, std::unordered_map<const void*, std::string>& storageMap);
   std::ofstream ofs_;
   caffe2::serialize::PyTorchStreamWriter writer_;
-
-  // all tensors that will be stored
-  std::vector<at::Tensor> tensor_table_;
 };
 
 ByteCodeSerializer::ByteCodeSerializer(const std::string& filename)
@@ -917,13 +916,76 @@ ByteCodeSerializer::ByteCodeSerializer(const std::string& filename)
 ByteCodeSerializer::ByteCodeSerializer(std::ostream* ofs)
     : ofs_(), writer_(ofs) {}
 
-void ByteCodeSerializer::serialize(const FrameOutput& frame) {
-  bytecode::FrameProto frame_proto;
-  frame_proto.set_name(frame.name);
-  frame_proto.set_pc(frame.pc);
+void ByteCodeSerializer::addConstant(const IValue& val, bytecode::FrameProto& frame_proto,
+                 size_t tensor_id, std::unordered_map<const void*, std::string>& storageMap) {
+  auto attribute = frame_proto.add_constants();
+  if (val.isInt()) {
+    attribute->set_kind(bytecode::ConstantProto::i);
+    attribute->set_int_value(val.toInt());
+  }
+  else if (val.isDouble()) {
+    attribute->set_kind(bytecode::ConstantProto::f);
+    attribute->set_float_value(val.toDouble());
+  }
+  else if (val.isTensor()) {
+    attribute->set_kind(bytecode::ConstantProto::t);
+    attribute->set_tensor_id(tensor_id);
+    auto tensor_proto = frame_proto.add_tensors();
+    convertAndWriteTensor(tensor_id++, val.toTensor(), tensor_proto, storageMap, writer_);
+  }
+  else if (val.isIntList()) {
+    attribute->set_kind(bytecode::ConstantProto::is);
+    auto list = val.toIntList();
+    for (size_t i = 0; i < list.size(); ++i) {
+      attribute->add_int_list(list[i]);
+    }
+  }
+  else if (val.isDoubleList()) {
+    attribute->set_kind(bytecode::ConstantProto::fs);
+    auto list = val.toDoubleList();
+    for (size_t i = 0; i < list.size(); ++i) {
+      attribute->add_float_list(list[i]);
+    }
+  }
+  else if (val.isBool()) {
+    attribute->set_kind(bytecode::ConstantProto::b);
+    attribute->set_bool_value(val.toBool());
+  }
+  else if (val.isBoolList()) {
+    attribute->set_kind(bytecode::ConstantProto::bs);
+    auto list = val.toBoolList();
+    for (size_t i = 0; i < list.size(); ++i) {
+      attribute->add_bool_list(list[i]);
+    }
+  }
+  else if (val.isNone()) {
+    attribute->set_kind(bytecode::ConstantProto::n);
+  }
+  else {
+    throw std::runtime_error("Value type of Constant is not supported yet.");
+  }
+}
 
-  // instructions
-  for (const auto& ins : frame.instructions) {
+void ByteCodeSerializer::serialize(const script::Module& module) {
+  auto method = module.get_method("forward");
+
+  auto frame = method.function().get_executor().getFrame();
+
+  if (frame == nullptr) return;
+
+  bytecode::FrameProto frame_proto;
+  frame_proto.set_name(frame->name);
+  frame_proto.set_pc(frame->pc);
+
+  // constants
+  std::unordered_map<const void*, std::string> storageMap;
+  size_t tensor_id = 0;
+  for (const auto& val : frame->constants) {
+    addConstant(val, frame_proto, tensor_id, storageMap);
+  }
+
+  // instructions. special treatment on attributes
+  for (const auto& ins : frame->instructions) {
     auto ins_proto = frame_proto.add_instructions();
     std::stringstream ss;
     ss << ins.op;
@@ -932,70 +994,27 @@ void ByteCodeSerializer::serialize(const FrameOutput& frame) {
     ins_proto->set_x(ins.X);
   }
 
-  std::unordered_map<const void*, std::string> storageMap;
-  size_t tensor_id = 0;
   // operators and parameters
-  for (size_t i = 0; i < frame.operators.size(); ++i) {
+  Stack outstack;
+  for (size_t i = 0; i < frame->operators.size(); ++i) {
     auto op_proto = frame_proto.add_operators();
-    auto name = frame.opnames[i].name;
-    if (name == "prim::GetAttr") {
-      Stack outstack;
-      frame.operators[i](outstack);
-      auto val = outstack.back();
-//      val.tagKind()
-    }
+    auto name = frame->opnames[i].name;
+//    if (name == "prim::GetAttr") {
+//      if (outstack.empty()) {
+//        outstack.emplace_back(module.module_object());
+//      }
+//      frame->operators[i](outstack);
+//      auto val = outstack.back();
+//      if (val.isObject()) {
+//        std::cout << val << std::endl;
+//      }
+//      else {
+//        // Change it to LOADC
+//        op_proto->set_name();
+//      }
+//    }
     op_proto->set_name(name);
-    op_proto->set_overload_name(frame.opnames[i].overload_name);
-  }
-
-  // constants
-  for (const auto& val : frame.constants) {
-    auto attribute = frame_proto.add_constants();
-    if (val.isInt()) {
-      attribute->set_kind(bytecode::ConstantProto::i);
-      attribute->set_int_value(val.toInt());
-    }
-    else if (val.isDouble()) {
-      attribute->set_kind(bytecode::ConstantProto::f);
-      attribute->set_float_value(val.toDouble());
-    }
-    else if (val.isTensor()) {
-      attribute->set_kind(bytecode::ConstantProto::t);
-      attribute->set_tensor_id(tensor_id);
-      auto tensor_proto = frame_proto.add_tensors();
-      convertAndWriteTensor(tensor_id++, val.toTensor(), tensor_proto, storageMap, writer_);
-    }
-    else if (val.isIntList()) {
-      attribute->set_kind(bytecode::ConstantProto::is);
-      auto list = val.toIntList();
-      for (size_t i = 0; i < list.size(); ++i) {
-        attribute->add_int_list(list[i]);
-      }
-    }
-    else if (val.isDoubleList()) {
-      attribute->set_kind(bytecode::ConstantProto::fs);
-      auto list = val.toDoubleList();
-      for (size_t i = 0; i < list.size(); ++i) {
-        attribute->add_float_list(list[i]);
-      }
-    }
-    else if (val.isBool()) {
-      attribute->set_kind(bytecode::ConstantProto::b);
-      attribute->set_bool_value(val.toBool());
-    }
-    else if (val.isBoolList()) {
-      attribute->set_kind(bytecode::ConstantProto::bs);
-      auto list = val.toBoolList();
-      for (size_t i = 0; i < list.size(); ++i) {
-        attribute->add_bool_list(list[i]);
-      }
-    }
-    else if (val.isNone()) {
-      attribute->set_kind(bytecode::ConstantProto::n);
-    }
-    else {
-      throw std::runtime_error("Value type of Constant is not supported yet.");
-    }
+    op_proto->set_overload_name(frame->opnames[i].overload_name);
   }
 
   std::string output;
@@ -1264,14 +1283,8 @@ void ExportModule(
   ScriptModuleSerializer serializer(filename);
   serializer.serialize(module, extra_files);
 
-  auto method = module.get_method("forward");
-
-  auto frame = method.function().get_executor().getFrame();
-  if (frame != nullptr) {
-    ByteCodeSerializer bcserializer(filename + ".bc");
-    bcserializer.serialize(*frame);
-    //  bcserializer.serialize(module, extra_files);
-  }
+  ByteCodeSerializer bcserializer(filename + ".bc");
+  bcserializer.serialize(module);
 }
 
 } // namespace jit

@@ -536,6 +536,12 @@ struct GraphExecutorImpl : public GraphExecutorImplBase {
     // path ArgumentSpec even computes its hashCode here.
     ArgumentSpec spec =
         arg_spec_creator_.create(autograd::GradMode::is_enabled(), stack);
+
+    for (size_t i = 0; i < spec.numTensors(); ++i) {
+      auto t = spec.tensorAt(i);
+      std::cout << t << std::endl;
+      std::cout << std::endl;
+    }
     {
       std::lock_guard<std::mutex> lock(compile_mutex);
       auto it = plan_cache.find(spec);
