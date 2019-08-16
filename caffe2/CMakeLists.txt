@@ -465,6 +465,7 @@ if (NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
       ${TORCH_SRC_DIR}/csrc/distributed/rpc/Message.cpp
       ${TORCH_SRC_DIR}/csrc/distributed/rpc/ScriptCall.cpp
       ${TORCH_SRC_DIR}/csrc/distributed/rpc/ScriptRet.cpp
+      ${TORCH_SRC_DIR}/csrc/jit/export_bytecode.cpp
       ${TORCH_SRC_DIR}/csrc/jit/export.cpp
       ${TORCH_ROOT}/test/cpp/jit/test.cpp
     )
@@ -560,7 +561,6 @@ if(USE_ROCM)
 
   list(APPEND Caffe2_CPU_SRCS ${Caffe2_HIP_SRCS})
 endif()
-
 
 # Compile exposed libraries.
 IF (USE_ROCM)
