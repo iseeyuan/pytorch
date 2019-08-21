@@ -14,6 +14,7 @@ int main(int argc, const char* argv[]) {
 
   // Deserialize the ScriptModule from a file using torch::jit::load().
   torch::jit::script::Module module = torch::jit::load(argv[1]);
+//  module.save("/Users/myuan/data/lenet/lenet_traced1.pt");
   torch::jit::mobile::SaveBytecode(module, argv[2]);
 
 //  std::vector<torch::jit::IValue> inputs;
